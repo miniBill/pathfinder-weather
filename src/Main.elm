@@ -123,7 +123,7 @@ view model =
         , let
             altitudeCell : List (Attribute Msg) -> Altitude -> String -> Html Msg
             altitudeCell attrs altitude label =
-                Html.td attrs
+                Html.div attrs
                     [ Theme.toggle
                         [ Html.Attributes.style "width" "100%"
                         , Html.Attributes.style "height" "100%"
@@ -137,12 +137,13 @@ view model =
                     ]
           in
           boxxxy "Select an altitude"
-            [ Html.table
+            [ Html.div
                 [ Html.Attributes.style "display" "grid"
                 , Html.Attributes.style "grid-template-columns" "auto auto auto"
+                , Html.Attributes.style "gap" "4px"
                 ]
-                [ Html.td [] [ Html.text "Altitude" ]
-                , Html.td [ Html.Attributes.style "grid-column" "span 2" ] [ Html.text "Range" ]
+                [ Html.div [] [ Html.text "Altitude" ]
+                , Html.div [ Html.Attributes.style "grid-column" "span 2" ] [ Html.text "Range" ]
                 , altitudeCell []
                     SeaLevel
                     (Altitude.toString SeaLevel)
