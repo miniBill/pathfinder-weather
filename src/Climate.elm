@@ -1,16 +1,28 @@
-module Climate exposing (Climate(..), toString)
+module Climate exposing (Climate(..), Cold(..), toString)
 
 
 type Climate
-    = Cold
+    = Cold Cold
     | Temperate
     | Tropical
+
+
+type Cold
+    = Regular
+    | Arctic
+    | Polar
 
 
 toString : Climate -> String
 toString name =
     case name of
-        Cold ->
+        Cold Polar ->
+            "Polar"
+
+        Cold Arctic ->
+            "Arctic"
+
+        Cold Regular ->
             "Cold"
 
         Temperate ->

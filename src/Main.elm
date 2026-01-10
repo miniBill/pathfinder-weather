@@ -3,7 +3,7 @@ module Main exposing (main)
 import Altitude exposing (Altitude(..))
 import Baseline
 import Browser
-import Climate exposing (Climate(..))
+import Climate exposing (Climate(..), Cold(..))
 import Color
 import Frequency
 import Html exposing (Attribute, Html)
@@ -155,9 +155,14 @@ view model =
                 |> Html.table []
             ]
         , boxxxy "Select a baseline"
-            [ [ Cold, Temperate, Tropical ]
+            [ [ ( Tropical, "0 – 30°" )
+              , ( Temperate, "30° – 60°" )
+              , ( Cold Regular, "60° – 82°" )
+              , ( Cold Arctic, "82° – 86°" )
+              , ( Cold Polar, "86° – 90°" )
+              ]
                 |> List.map
-                    (\climate ->
+                    (\( climate, latitude ) ->
                         Html.tr []
                             [ Html.td []
                                 [ Theme.toggle
@@ -170,6 +175,7 @@ view model =
                                     , selected = model.climate == climate
                                     }
                                 ]
+                            , Html.td [] [ Html.text latitude ]
                             , baselineCell model climate Winter
                             , baselineCell model climate Spring
                             , baselineCell model climate Summer
@@ -194,6 +200,7 @@ view model =
                      in
                      Html.tr []
                         [ Html.td [] [ Html.text "Climate" ]
+                        , Html.td [] [ Html.text "Latitude" ]
                         , seasonCell Winter
                         , seasonCell Spring
                         , seasonCell Summer
