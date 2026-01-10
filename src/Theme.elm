@@ -1,6 +1,7 @@
 module Theme exposing (button, temperatureColor, toggle)
 
 import Color exposing (Color)
+import Color.Oklch as Oklch exposing (Oklch)
 import Html exposing (Attribute, Html)
 import Html.Attributes
 import Html.Events
@@ -27,25 +28,72 @@ toggle :
         { selected : Bool
         , label : String
         , onPress : msg
+        , color : Maybe Color
+        , background : Maybe Color
         }
     -> Html msg
 toggle attrs config =
     Html.button
-        ([ Html.Attributes.style "color" "inherit"
-         , Html.Attributes.style "background" "inherit"
-         , Html.Attributes.style "weight" "bold"
-         , Html.Attributes.style "border"
+        ([ Html.Attributes.style "color"
+            (config.color
+                |> Maybe.map Color.toCssString
+                |> Maybe.withDefault "inherit"
+            )
+         , Html.Attributes.style "background"
             (if config.selected then
-                "1px dashed blue"
+                config.background
+                    |> Maybe.map Color.toCssString
+                    |> Maybe.withDefault "transparent"
 
              else
-                "1px solid black"
+                let
+                    bgColor : String
+                    bgColor =
+                        let
+                            oklch : Oklch
+                            oklch =
+                                config.background
+                                    |> Maybe.withDefault Color.white
+                                    |> Oklch.fromColor
+                        in
+                        { oklch
+                            | chroma = oklch.chroma * 0.7
+                            , lightness = (oklch.lightness - 0.5) * 0.6 + 0.5
+                        }
+                            |> Oklch.toCssString
+
+                    stripeColor : String
+                    stripeColor =
+                        let
+                            oklch : Oklch
+                            oklch =
+                                config.background
+                                    |> Maybe.withDefault Color.white
+                                    |> Oklch.fromColor
+                        in
+                        { oklch | lightness = (oklch.lightness - 0.5) * 0.6 + 0.5 }
+                            |> Oklch.toCssString
+                in
+                cssFunction "repeating-linear-gradient"
+                    [ "135deg"
+                    , bgColor
+                    , bgColor ++ " 10px"
+                    , stripeColor ++ " 10px"
+                    , stripeColor ++ " 11.44px"
+                    ]
             )
+         , Html.Attributes.style "weight" "bold"
+         , Html.Attributes.style "border" "1px solid black"
          , Html.Events.onClick config.onPress
          ]
             ++ attrs
         )
         [ Html.text config.label ]
+
+
+cssFunction : String -> List String -> String
+cssFunction name args =
+    name ++ "(" ++ String.join ", " args ++ ")"
 
 
 {-| Source: <https://en.wikipedia.org/w/index.php?title=Module:Weather_box/colors&action=edit>

@@ -12,7 +12,7 @@
             "elm/html": "1.0.1",
             "elm/json": "1.1.4",
             "ianmackenzie/elm-units": "2.10.0",
-            "rtfeldman/elm-hex": "1.0.0"
+            "miniBill/elm-oklch": "1.1.0"
         },
         "indirect": {
             "elm/time": "1.0.0",
