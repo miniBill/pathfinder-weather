@@ -71,207 +71,231 @@ view model =
         , Html.Attributes.style "flex-wrap" "wrap"
         , Html.Attributes.style "gap" "8px"
         ]
-        [ boxxxy "Select your units"
-            [ Html.table
-                []
-                [ Html.tr []
-                    [ Html.td []
-                        [ Theme.toggle
-                            [ Html.Attributes.style "width" "100%" ]
-                            { label = "Celsius"
-                            , onPress = TemperatureUnit Celsius
-                            , selected = model.temperatureUnit == Celsius
-                            , background = Nothing
-                            , color = Nothing
-                            }
+        [ unitsBox model
+        , altitudeBox model
+        , baselineInputBox model
+        , baselineOutputBox model
+        ]
+
+
+baselineOutputBox : Model -> Html Msg
+baselineOutputBox model =
+    boxxxy "Baseline climate"
+        [ [ ( "Day temperature"
+            , [ Baseline.averageTemperature model
+                    |> temperatureCell model [ Html.Attributes.colspan 3 ]
+              ]
+            )
+          , ( "Night temperature"
+            , [ Baseline.averageTemperature model
+                    |> Temperature.plus (Temperature.fahrenheitDegrees -15)
+                    |> temperatureCell model []
+              , Html.td [] [ Html.text "to" ]
+              , Baseline.averageTemperature model
+                    |> Temperature.plus (Temperature.fahrenheitDegrees -5)
+                    |> temperatureCell model []
+              ]
+            )
+          , ( "Precipitation frequency"
+            , [ [ Html.text (Frequency.toString (Baseline.precipitationFrequency model)) ]
+                    |> Html.td
+                        [ Html.Attributes.style "border" "2px solid black"
+                        , Html.Attributes.colspan 3
                         ]
-                    , Html.td []
-                        [ Theme.toggle
-                            [ Html.Attributes.style "width" "100%" ]
-                            { label = "Fahrenheit"
-                            , onPress = TemperatureUnit Fahrenheit
-                            , selected = model.temperatureUnit == Fahrenheit
-                            , background = Nothing
-                            , color = Nothing
-                            }
+              ]
+            )
+          , ( "Precipitation intensity"
+            , [ [ Html.text (Intensity.toString (Baseline.precipitationIntensity model)) ]
+                    |> Html.td
+                        [ Html.Attributes.style "border" "2px solid black"
+                        , Html.Attributes.colspan 3
                         ]
+              ]
+            )
+          ]
+            |> List.map
+                (\( label, cells ) ->
+                    Html.tr []
+                        (Html.td [] [ Html.text label ]
+                            :: cells
+                        )
+                )
+            |> Html.table []
+        ]
+
+
+baselineInputBox : Model -> Html Msg
+baselineInputBox model =
+    let
+        seasonCell : Season -> Html Msg
+        seasonCell season =
+            Html.td []
+                [ Theme.toggle
+                    [ Html.Attributes.style "width" "100%"
                     ]
-                , Html.tr []
-                    [ Html.td []
-                        [ Theme.toggle
-                            [ Html.Attributes.style "width" "100%" ]
-                            { label = "Meter"
-                            , onPress = MeasureUnit Meter
-                            , selected = model.measureUnit == Meter
-                            , background = Nothing
-                            , color = Nothing
-                            }
-                        ]
-                    , Html.td []
-                        [ Theme.toggle
-                            [ Html.Attributes.style "width" "100%" ]
-                            { label = "Foot"
-                            , onPress = MeasureUnit Foot
-                            , selected = model.measureUnit == Foot
-                            , background = Nothing
-                            , color = Nothing
-                            }
-                        ]
-                    ]
+                    { color = Nothing
+                    , background = Nothing
+                    , label = Season.toString season
+                    , onPress = ClickedSeason season
+                    , selected = model.season == season
+                    }
                 ]
-            ]
-        , let
-            altitudeCell : List (Attribute Msg) -> Altitude -> String -> Html Msg
-            altitudeCell attrs altitude label =
-                Html.div attrs
+
+        header : Html Msg
+        header =
+            Html.tr []
+                [ Html.td [] [ Html.text "Climate" ]
+                , Html.td [ Html.Attributes.colspan 3 ] [ Html.text "Latitude" ]
+                , seasonCell Winter
+                , seasonCell Spring
+                , seasonCell Summer
+                , seasonCell Fall
+                ]
+
+        baselineRow : Climate -> Int -> Int -> Html Msg
+        baselineRow climate minLatitude maxLatitude =
+            Html.tr []
+                [ Html.td []
                     [ Theme.toggle
                         [ Html.Attributes.style "width" "100%"
-                        , Html.Attributes.style "height" "100%"
                         ]
                         { color = Nothing
                         , background = Nothing
-                        , selected = model.altitude == altitude
-                        , label = label
-                        , onPress = ClickedAltitude altitude
+                        , label = Climate.toString climate
+                        , onPress = ClickedClimate climate
+                        , selected = model.climate == climate
                         }
                     ]
-          in
-          boxxxy "Select an altitude"
-            [ Html.div
-                [ Html.Attributes.style "display" "grid"
-                , Html.Attributes.style "grid-template-columns" "auto auto auto"
-                , Html.Attributes.style "gap" "4px"
+                , Html.td [ Html.Attributes.style "text-align" "right" ] [ Html.text (String.fromInt minLatitude ++ "°") ]
+                , Html.td [] [ Html.text "–" ]
+                , Html.td [] [ Html.text (String.fromInt maxLatitude ++ "°") ]
+                , baselineCell model climate Winter
+                , baselineCell model climate Spring
+                , baselineCell model climate Summer
+                , baselineCell model climate Fall
                 ]
-                [ Html.div [] [ Html.text "Altitude" ]
-                , Html.div [ Html.Attributes.style "grid-column" "span 2" ] [ Html.text "Range" ]
-                , altitudeCell []
-                    SeaLevel
-                    (Altitude.toString SeaLevel)
-                , altitudeCell
-                    [ Html.Attributes.style "grid-column" "span 2" ]
-                    SeaLevel
-                    ("Below " ++ altitudeToString model (Length.feet 1000))
-                , altitudeCell []
-                    Lowland
-                    (Altitude.toString Lowland)
-                , altitudeCell
-                    [ Html.Attributes.style "grid-column" "span 2" ]
-                    Lowland
-                    (altitudeToString model (Length.feet 1000) ++ " to " ++ altitudeToString model (Length.feet 5000))
-                , altitudeCell
-                    [ Html.Attributes.style "grid-row" "span 3" ]
-                    (Highland Altitude.Regular)
-                    (Altitude.toString (Highland Altitude.Regular))
-                , altitudeCell
-                    [ Html.Attributes.style "grid-row" "span 3" ]
-                    (Highland Altitude.Regular)
-                    ("Above " ++ altitudeToString model (Length.feet 5000))
-                , altitudeCell []
-                    (Highland Altitude.Regular)
-                    "Regular"
-                , altitudeCell []
-                    (Highland Arid)
-                    "Arid and flat"
-                , altitudeCell []
-                    (Highland HighAltitude)
-                    ("Above " ++ altitudeToString model (Length.feet 10000))
+    in
+    boxxxy "Select a baseline"
+        [ Html.table
+            [ Html.Attributes.style "white-space" "nowrap" ]
+            [ header
+            , baselineRow Tropical 0 30
+            , baselineRow Temperate 30 60
+            , baselineRow (Cold Climate.Regular) 60 82
+            , baselineRow (Cold Arctic) 82 86
+            , baselineRow (Cold Polar) 86 90
+            ]
+        ]
+
+
+altitudeBox : Model -> Html Msg
+altitudeBox model =
+    let
+        altitudeCell : List (Attribute Msg) -> Altitude -> String -> Html Msg
+        altitudeCell attrs altitude label =
+            Html.div attrs
+                [ Theme.toggle
+                    [ Html.Attributes.style "width" "100%"
+                    , Html.Attributes.style "height" "100%"
+                    ]
+                    { color = Nothing
+                    , background = Nothing
+                    , selected = model.altitude == altitude
+                    , label = label
+                    , onPress = ClickedAltitude altitude
+                    }
                 ]
+    in
+    boxxxy "Select an altitude"
+        [ Html.div
+            [ Html.Attributes.style "display" "grid"
+            , Html.Attributes.style "grid-template-columns" "auto auto auto"
+            , Html.Attributes.style "gap" "4px"
             ]
-        , boxxxy "Select a baseline"
-            [ [ ( Tropical, 0, 30 )
-              , ( Temperate, 30, 60 )
-              , ( Cold Climate.Regular, 60, 82 )
-              , ( Cold Arctic, 82, 86 )
-              , ( Cold Polar, 86, 90 )
-              ]
-                |> List.map
-                    (\( climate, minLatitude, maxLatitude ) ->
-                        Html.tr []
-                            [ Html.td []
-                                [ Theme.toggle
-                                    [ Html.Attributes.style "width" "100%"
-                                    ]
-                                    { color = Nothing
-                                    , background = Nothing
-                                    , label = Climate.toString climate
-                                    , onPress = ClickedClimate climate
-                                    , selected = model.climate == climate
-                                    }
-                                ]
-                            , Html.td [ Html.Attributes.style "text-align" "right" ] [ Html.text (String.fromInt minLatitude ++ "°") ]
-                            , Html.td [] [ Html.text "–" ]
-                            , Html.td [] [ Html.text (String.fromInt maxLatitude ++ "°") ]
-                            , baselineCell model climate Winter
-                            , baselineCell model climate Spring
-                            , baselineCell model climate Summer
-                            , baselineCell model climate Fall
-                            ]
-                    )
-                |> (::)
-                    (let
-                        seasonCell : Season -> Html Msg
-                        seasonCell season =
-                            Html.td []
-                                [ Theme.toggle
-                                    [ Html.Attributes.style "width" "100%"
-                                    ]
-                                    { color = Nothing
-                                    , background = Nothing
-                                    , label = Season.toString season
-                                    , onPress = ClickedSeason season
-                                    , selected = model.season == season
-                                    }
-                                ]
-                     in
-                     Html.tr []
-                        [ Html.td [] [ Html.text "Climate" ]
-                        , Html.td [ Html.Attributes.colspan 3 ] [ Html.text "Latitude" ]
-                        , seasonCell Winter
-                        , seasonCell Spring
-                        , seasonCell Summer
-                        , seasonCell Fall
-                        ]
-                    )
-                |> Html.table [ Html.Attributes.style "white-space" "nowrap" ]
+            [ Html.div [] [ Html.text "Altitude" ]
+            , Html.div [ Html.Attributes.style "grid-column" "span 2" ] [ Html.text "Range" ]
+            , altitudeCell []
+                SeaLevel
+                (Altitude.toString SeaLevel)
+            , altitudeCell
+                [ Html.Attributes.style "grid-column" "span 2" ]
+                SeaLevel
+                ("Below " ++ altitudeToString model (Length.feet 1000))
+            , altitudeCell []
+                Lowland
+                (Altitude.toString Lowland)
+            , altitudeCell
+                [ Html.Attributes.style "grid-column" "span 2" ]
+                Lowland
+                (altitudeToString model (Length.feet 1000) ++ " to " ++ altitudeToString model (Length.feet 5000))
+            , altitudeCell
+                [ Html.Attributes.style "grid-row" "span 3" ]
+                (Highland Altitude.Regular)
+                (Altitude.toString (Highland Altitude.Regular))
+            , altitudeCell
+                [ Html.Attributes.style "grid-row" "span 3" ]
+                (Highland Altitude.Regular)
+                ("Above " ++ altitudeToString model (Length.feet 5000))
+            , altitudeCell []
+                (Highland Altitude.Regular)
+                "Regular"
+            , altitudeCell []
+                (Highland Arid)
+                "Arid and flat"
+            , altitudeCell []
+                (Highland HighAltitude)
+                ("Above " ++ altitudeToString model (Length.feet 10000))
             ]
-        , boxxxy "Baseline climate"
-            [ Html.table []
-                [ Html.tr []
-                    [ Html.td [] [ Html.text "Day temperature" ]
-                    , temperatureCell model
-                        [ Html.Attributes.colspan 3 ]
-                        (Baseline.averageTemperature model)
+        ]
+
+
+unitsBox : Model -> Html Msg
+unitsBox model =
+    boxxxy "Select your units"
+        [ Html.table
+            []
+            [ Html.tr []
+                [ Html.td []
+                    [ Theme.toggle
+                        [ Html.Attributes.style "width" "100%" ]
+                        { label = "Celsius"
+                        , onPress = TemperatureUnit Celsius
+                        , selected = model.temperatureUnit == Celsius
+                        , background = Nothing
+                        , color = Nothing
+                        }
                     ]
-                , Html.tr []
-                    [ Html.td []
-                        [ Html.text "Night temperature" ]
-                    , temperatureCell model
-                        []
-                        (Baseline.averageTemperature model
-                            |> Temperature.plus (Temperature.fahrenheitDegrees -15)
-                        )
-                    , Html.td [] [ Html.text "to" ]
-                    , temperatureCell model
-                        []
-                        (Baseline.averageTemperature model
-                            |> Temperature.plus (Temperature.fahrenheitDegrees -5)
-                        )
+                , Html.td []
+                    [ Theme.toggle
+                        [ Html.Attributes.style "width" "100%" ]
+                        { label = "Fahrenheit"
+                        , onPress = TemperatureUnit Fahrenheit
+                        , selected = model.temperatureUnit == Fahrenheit
+                        , background = Nothing
+                        , color = Nothing
+                        }
                     ]
-                , Html.tr []
-                    [ Html.td [] [ Html.text "Precipitation frequency" ]
-                    , Html.td
-                        [ Html.Attributes.style "border" "2px solid black"
-                        , Html.Attributes.colspan 3
-                        ]
-                        [ Html.text (Frequency.toString (Baseline.precipitationFrequency model)) ]
+                ]
+            , Html.tr []
+                [ Html.td []
+                    [ Theme.toggle
+                        [ Html.Attributes.style "width" "100%" ]
+                        { label = "Meter"
+                        , onPress = MeasureUnit Meter
+                        , selected = model.measureUnit == Meter
+                        , background = Nothing
+                        , color = Nothing
+                        }
                     ]
-                , Html.tr []
-                    [ Html.td [] [ Html.text "Precipitation intensity" ]
-                    , Html.td
-                        [ Html.Attributes.style "border" "2px solid black"
-                        , Html.Attributes.colspan 3
-                        ]
-                        [ Html.text (Intensity.toString (Baseline.precipitationIntensity model)) ]
+                , Html.td []
+                    [ Theme.toggle
+                        [ Html.Attributes.style "width" "100%" ]
+                        { label = "Foot"
+                        , onPress = MeasureUnit Foot
+                        , selected = model.measureUnit == Foot
+                        , background = Nothing
+                        , color = Nothing
+                        }
                     ]
                 ]
             ]
