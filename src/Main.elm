@@ -143,15 +143,37 @@ view model =
                 ]
                 [ Html.td [] [ Html.text "Altitude" ]
                 , Html.td [ Html.Attributes.style "grid-column" "span 2" ] [ Html.text "Range" ]
-                , altitudeCell [] SeaLevel (Altitude.toString SeaLevel)
-                , altitudeCell [ Html.Attributes.style "grid-column" "span 2" ] SeaLevel ("Below " ++ altitudeToString model (Length.feet 1000))
-                , altitudeCell [] Lowland (Altitude.toString Lowland)
-                , altitudeCell [ Html.Attributes.style "grid-column" "span 2" ] Lowland (altitudeToString model (Length.feet 1000) ++ " to " ++ altitudeToString model (Length.feet 5000))
-                , altitudeCell [ Html.Attributes.style "grid-row" "span 3" ] (Highland Altitude.Regular) (Altitude.toString (Highland Altitude.Regular))
-                , altitudeCell [ Html.Attributes.style "grid-row" "span 3" ] (Highland Altitude.Regular) ("Above " ++ altitudeToString model (Length.feet 5000))
-                , altitudeCell [] (Highland Altitude.Regular) "Regular"
-                , altitudeCell [] (Highland Arid) "Arid and flat"
-                , altitudeCell [] (Highland HighAltitude) ("Above " ++ altitudeToString model (Length.feet 10000))
+                , altitudeCell []
+                    SeaLevel
+                    (Altitude.toString SeaLevel)
+                , altitudeCell
+                    [ Html.Attributes.style "grid-column" "span 2" ]
+                    SeaLevel
+                    ("Below " ++ altitudeToString model (Length.feet 1000))
+                , altitudeCell []
+                    Lowland
+                    (Altitude.toString Lowland)
+                , altitudeCell
+                    [ Html.Attributes.style "grid-column" "span 2" ]
+                    Lowland
+                    (altitudeToString model (Length.feet 1000) ++ " to " ++ altitudeToString model (Length.feet 5000))
+                , altitudeCell
+                    [ Html.Attributes.style "grid-row" "span 3" ]
+                    (Highland Altitude.Regular)
+                    (Altitude.toString (Highland Altitude.Regular))
+                , altitudeCell
+                    [ Html.Attributes.style "grid-row" "span 3" ]
+                    (Highland Altitude.Regular)
+                    ("Above " ++ altitudeToString model (Length.feet 5000))
+                , altitudeCell []
+                    (Highland Altitude.Regular)
+                    "Regular"
+                , altitudeCell []
+                    (Highland Arid)
+                    "Arid and flat"
+                , altitudeCell []
+                    (Highland HighAltitude)
+                    ("Above " ++ altitudeToString model (Length.feet 10000))
                 ]
             ]
         , boxxxy "Select a baseline"
