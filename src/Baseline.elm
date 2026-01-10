@@ -1,6 +1,6 @@
 module Baseline exposing (averageTemperature, precipitationFrequency, precipitationIntensity)
 
-import Altitude exposing (Altitude(..))
+import Altitude exposing (Altitude(..), Highland(..))
 import Climate exposing (Climate(..), Cold(..))
 import Frequency exposing (Frequency(..))
 import Intensity exposing (Intensity(..))
@@ -39,16 +39,16 @@ averageTemperature { climate, season, altitude } =
                 ( Cold Arctic, Fall ) ->
                     Temperature.degreesFahrenheit 20
 
-                ( Cold Regular, Winter ) ->
+                ( Cold Climate.Regular, Winter ) ->
                     Temperature.degreesFahrenheit 20
 
-                ( Cold Regular, Spring ) ->
+                ( Cold Climate.Regular, Spring ) ->
                     Temperature.degreesFahrenheit 30
 
-                ( Cold Regular, Summer ) ->
+                ( Cold Climate.Regular, Summer ) ->
                     Temperature.degreesFahrenheit 40
 
-                ( Cold Regular, Fall ) ->
+                ( Cold Climate.Regular, Fall ) ->
                     Temperature.degreesFahrenheit 30
 
                 ( Temperate, Winter ) ->
@@ -84,8 +84,14 @@ averageTemperature { climate, season, altitude } =
                 Lowland ->
                     Quantity.zero
 
-                Highland ->
+                Highland Arid ->
+                    Temperature.fahrenheitDegrees 10
+
+                Highland Altitude.Regular ->
                     Temperature.fahrenheitDegrees -10
+
+                Highland HighAltitude ->
+                    Temperature.fahrenheitDegrees -20
     in
     baseline |> Temperature.plus adjustment
 
@@ -102,7 +108,7 @@ precipitationIntensity { altitude, climate } =
                 Lowland ->
                     Medium
 
-                Highland ->
+                Highland _ ->
                     Medium
     in
     case climate of
@@ -165,5 +171,5 @@ precipitationFrequency { climate, season, altitude } =
         Lowland ->
             baseline
 
-        Highland ->
+        Highland _ ->
             Frequency.decrease baseline

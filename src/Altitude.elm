@@ -1,10 +1,16 @@
-module Altitude exposing (Altitude(..), toString)
+module Altitude exposing (Altitude(..), Highland(..), toString)
 
 
 type Altitude
     = SeaLevel
     | Lowland
-    | Highland
+    | Highland Highland
+
+
+type Highland
+    = Arid
+    | Regular
+    | HighAltitude
 
 
 toString : Altitude -> String
@@ -16,5 +22,11 @@ toString altitude =
         Lowland ->
             "Lowland"
 
-        Highland ->
+        Highland Regular ->
             "Highland"
+
+        Highland Arid ->
+            "Highland (arid)"
+
+        Highland HighAltitude ->
+            "Highland (high altitude)"

@@ -1,10 +1,11 @@
 module Main exposing (main)
 
-import Altitude exposing (Altitude(..))
+import Altitude exposing (Altitude(..), Highland(..))
 import Baseline
 import Browser
 import Climate exposing (Climate(..), Cold(..))
 import Color
+import Color.Oklch as Oklch
 import Frequency
 import Html exposing (Attribute, Html)
 import Html.Attributes
@@ -67,6 +68,7 @@ view model =
     Html.main_
         [ Html.Attributes.style "padding" "8px"
         , Html.Attributes.style "display" "flex"
+        , Html.Attributes.style "flex-wrap" "wrap"
         , Html.Attributes.style "gap" "8px"
         ]
         [ boxxxy "Select your units"
@@ -118,51 +120,49 @@ view model =
                     ]
                 ]
             ]
-        , boxxxy "Select an altitude"
-            [ [ ( SeaLevel, "Below " ++ altitudeToString model (Length.feet 1000) )
-              , ( Lowland, altitudeToString model (Length.feet 1000) ++ " to " ++ altitudeToString model (Length.feet 5000) )
-              , ( Highland, "Above " ++ altitudeToString model (Length.feet 5000) )
-              ]
-                |> List.map
-                    (\( altitude, label ) ->
-                        Html.tr []
-                            [ Html.td []
-                                [ Theme.toggle [ Html.Attributes.style "width" "100%" ]
-                                    { color = Nothing
-                                    , background = Nothing
-                                    , selected = model.altitude == altitude
-                                    , label = Altitude.toString altitude
-                                    , onPress = ClickedAltitude altitude
-                                    }
-                                ]
-                            , Html.td []
-                                [ Theme.toggle [ Html.Attributes.style "width" "100%" ]
-                                    { color = Nothing
-                                    , background = Nothing
-                                    , selected = model.altitude == altitude
-                                    , label = label
-                                    , onPress = ClickedAltitude altitude
-                                    }
-                                ]
-                            ]
-                    )
-                |> (::)
-                    (Html.tr []
-                        [ Html.td [] [ Html.text "Altitude" ]
-                        , Html.td [] [ Html.text "Range" ]
+        , let
+            altitudeCell : List (Attribute Msg) -> Altitude -> String -> Html Msg
+            altitudeCell attrs altitude label =
+                Html.td attrs
+                    [ Theme.toggle
+                        [ Html.Attributes.style "width" "100%"
+                        , Html.Attributes.style "height" "100%"
                         ]
-                    )
-                |> Html.table []
+                        { color = Nothing
+                        , background = Nothing
+                        , selected = model.altitude == altitude
+                        , label = label
+                        , onPress = ClickedAltitude altitude
+                        }
+                    ]
+          in
+          boxxxy "Select an altitude"
+            [ Html.table
+                [ Html.Attributes.style "display" "grid"
+                , Html.Attributes.style "grid-template-columns" "auto auto auto"
+                ]
+                [ Html.td [] [ Html.text "Altitude" ]
+                , Html.td [ Html.Attributes.style "grid-column" "span 2" ] [ Html.text "Range" ]
+                , altitudeCell [] SeaLevel (Altitude.toString SeaLevel)
+                , altitudeCell [ Html.Attributes.style "grid-column" "span 2" ] SeaLevel ("Below " ++ altitudeToString model (Length.feet 1000))
+                , altitudeCell [] Lowland (Altitude.toString Lowland)
+                , altitudeCell [ Html.Attributes.style "grid-column" "span 2" ] Lowland (altitudeToString model (Length.feet 1000) ++ " to " ++ altitudeToString model (Length.feet 5000))
+                , altitudeCell [ Html.Attributes.style "grid-row" "span 3" ] (Highland Altitude.Regular) (Altitude.toString (Highland Altitude.Regular))
+                , altitudeCell [ Html.Attributes.style "grid-row" "span 3" ] (Highland Altitude.Regular) ("Above " ++ altitudeToString model (Length.feet 5000))
+                , altitudeCell [] (Highland Altitude.Regular) "Regular"
+                , altitudeCell [] (Highland Arid) "Arid and flat"
+                , altitudeCell [] (Highland HighAltitude) ("Above " ++ altitudeToString model (Length.feet 10000))
+                ]
             ]
         , boxxxy "Select a baseline"
-            [ [ ( Tropical, "0 – 30°" )
-              , ( Temperate, "30° – 60°" )
-              , ( Cold Regular, "60° – 82°" )
-              , ( Cold Arctic, "82° – 86°" )
-              , ( Cold Polar, "86° – 90°" )
+            [ [ ( Tropical, 0, 30 )
+              , ( Temperate, 30, 60 )
+              , ( Cold Climate.Regular, 60, 82 )
+              , ( Cold Arctic, 82, 86 )
+              , ( Cold Polar, 86, 90 )
               ]
                 |> List.map
-                    (\( climate, latitude ) ->
+                    (\( climate, minLatitude, maxLatitude ) ->
                         Html.tr []
                             [ Html.td []
                                 [ Theme.toggle
@@ -175,7 +175,9 @@ view model =
                                     , selected = model.climate == climate
                                     }
                                 ]
-                            , Html.td [] [ Html.text latitude ]
+                            , Html.td [ Html.Attributes.style "text-align" "right" ] [ Html.text (String.fromInt minLatitude ++ "°") ]
+                            , Html.td [] [ Html.text "–" ]
+                            , Html.td [] [ Html.text (String.fromInt maxLatitude ++ "°") ]
                             , baselineCell model climate Winter
                             , baselineCell model climate Spring
                             , baselineCell model climate Summer
@@ -200,14 +202,14 @@ view model =
                      in
                      Html.tr []
                         [ Html.td [] [ Html.text "Climate" ]
-                        , Html.td [] [ Html.text "Latitude" ]
+                        , Html.td [ Html.Attributes.colspan 3 ] [ Html.text "Latitude" ]
                         , seasonCell Winter
                         , seasonCell Spring
                         , seasonCell Summer
                         , seasonCell Fall
                         ]
                     )
-                |> Html.table []
+                |> Html.table [ Html.Attributes.style "white-space" "nowrap" ]
             ]
         , boxxxy "Baseline climate"
             [ Html.table []
@@ -225,7 +227,7 @@ view model =
                         (Baseline.averageTemperature model
                             |> Temperature.plus (Temperature.fahrenheitDegrees -15)
                         )
-                    , Html.td [] [ Html.text "–" ]
+                    , Html.td [] [ Html.text "to" ]
                     , temperatureCell model
                         []
                         (Baseline.averageTemperature model
@@ -267,6 +269,7 @@ temperatureCell model attrs temperature =
         ([ Html.Attributes.style "color" (Color.toCssString textColor)
          , Html.Attributes.style "background" (Color.toCssString backgroundColor)
          , Html.Attributes.style "border" "1px solid black"
+         , Html.Attributes.style "white-space" "nowrap"
          ]
             ++ attrs
         )
@@ -299,6 +302,11 @@ temperatureToString model temperature =
 
 boxxxy : String -> List (Html Msg) -> Html Msg
 boxxxy label children =
+    let
+        backgroundColor : String
+        backgroundColor =
+            Oklch.toCssString (Oklch.oklch 0.9 0.04 0.75)
+    in
     Html.div
         [ Html.Attributes.style "display" "flex"
         , Html.Attributes.style "flex-direction" "column"
@@ -311,7 +319,7 @@ boxxxy label children =
                 [ Html.Attributes.style "border-width" "1px 1px 0 1px"
                 , Html.Attributes.style "border-style" "solid"
                 , Html.Attributes.style "border-color" "black"
-                , Html.Attributes.style "background" "white"
+                , Html.Attributes.style "background" backgroundColor
                 , Html.Attributes.style "padding" "8px"
                 , Html.Attributes.style "border-radius" "8px 8px 0 0"
                 , Html.Attributes.style "align-self" "start"
@@ -329,6 +337,7 @@ boxxxy label children =
             , Html.Attributes.style "display" "flex"
             , Html.Attributes.style "flex-direction" "column"
             , Html.Attributes.style "gap" "8px"
+            , Html.Attributes.style "background" backgroundColor
             ]
             children
         ]

@@ -18,3 +18,7 @@ img {
     max-width: 100%;
     height: auto;
 }
+
+body {
+    background: oklch(30% 0.19 270);
+}
