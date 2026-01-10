@@ -211,7 +211,8 @@ view model =
                         (Baseline.averageTemperature model)
                     ]
                 , Html.tr []
-                    [ Html.td [] [ Html.text "Night temperature (day - 3 - 2d6)" ]
+                    [ Html.td []
+                        [ Html.text "Night temperature" ]
                     , temperatureCell model
                         []
                         (Baseline.averageTemperature model
