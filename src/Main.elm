@@ -329,7 +329,7 @@ altitudeToString model value =
             String.fromInt (round (Length.inFeet value)) ++ " ft."
 
         Meter ->
-            String.fromInt (round (Length.inMeters value) // 100 * 100) ++ "m"
+            String.fromInt (round (Length.inMeters value / 100) * 100) ++ "m"
 
 
 temperatureCell : Model -> List (Attribute msg) -> Temperature -> Html msg
