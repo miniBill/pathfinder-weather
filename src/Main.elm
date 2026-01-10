@@ -50,7 +50,8 @@ view : Model -> Html Msg
 view model =
     Html.main_
         [ Html.Attributes.style "padding" "8px" ]
-        [ [ Cold, Temperate, Tropical ]
+        [ Html.text "Select a baseline"
+        , [ Cold, Temperate, Tropical ]
             |> List.map
                 (\climate ->
                     Html.tr []

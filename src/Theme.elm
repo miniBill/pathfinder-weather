@@ -36,7 +36,7 @@ toggle attrs config =
          , Html.Attributes.style "weight" "bold"
          , Html.Attributes.style "border"
             (if config.selected then
-                "1px dashed black"
+                "1px dashed blue"
 
              else
                 "1px solid black"
