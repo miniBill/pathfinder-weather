@@ -75,7 +75,90 @@ view model =
         , altitudeBox model
         , baselineInputBox model
         , baselineOutputBox model
+        , variationsBox model
         ]
+
+
+variationsBox : Model -> Html Msg
+variationsBox model =
+    let
+        header : Html msg
+        header =
+            Html.tr []
+                [ Html.th [ Html.Attributes.colspan 3 ] [ Html.text "d%" ]
+                , Html.th [] [ Html.text "Variation" ]
+                , Html.th [] [ Html.text "Duration" ]
+                ]
+
+        var : Int -> Int -> Int -> String -> Html msg
+        var pctMin pctMax dice duration =
+            let
+                variation : String
+                variation =
+                    if dice == 0 then
+                        "No variation"
+
+                    else if dice < 0 then
+                        String.fromInt dice ++ "d" ++ deltaToString model (Temperature.fahrenheitDegrees 10)
+
+                    else
+                        "+" ++ String.fromInt dice ++ "d" ++ deltaToString model (Temperature.fahrenheitDegrees 10)
+            in
+            if pctMin == pctMax then
+                Html.tr []
+                    [ Html.td
+                        [ Html.Attributes.style "text-align" "center"
+                        , Html.Attributes.colspan 3
+                        ]
+                        [ Html.text (String.fromInt pctMin) ]
+                    , Html.td [] [ Html.text variation ]
+                    , Html.td [] [ Html.text (duration ++ " days") ]
+                    ]
+
+            else
+                Html.tr []
+                    [ Html.td
+                        [ Html.Attributes.style "text-align" "right" ]
+                        [ Html.text (String.fromInt pctMin) ]
+                    , Html.td [] [ Html.text "–" ]
+                    , Html.td [] [ Html.text (String.fromInt pctMax) ]
+                    , Html.td [] [ Html.text variation ]
+                    , Html.td [] [ Html.text (duration ++ " days") ]
+                    ]
+
+        rows : List (Html msg)
+        rows =
+            case model.climate of
+                Cold _ ->
+                    [ var 1 20 -3 "1d4"
+                    , var 21 40 -2 "1d6+1"
+                    , var 41 60 -1 "1d6+2"
+                    , var 61 80 0 "1d6+2"
+                    , var 81 95 1 "1d6+1"
+                    , var 96 99 2 "1d4"
+                    , var 100 100 3 "1d2"
+                    ]
+
+                Temperate ->
+                    [ var 1 5 -3 "1d2"
+                    , var 6 15 -2 "1d4"
+                    , var 16 35 -1 "1d4+1"
+                    , var 36 65 0 "1d6+1"
+                    , var 66 85 1 "1d4+1"
+                    , var 86 95 2 "1d4"
+                    , var 96 100 3 "1d2"
+                    ]
+
+                Tropical ->
+                    [ var 1 10 -2 "1d2"
+                    , var 11 25 -1 "1d2"
+                    , var 26 55 0 "1d4"
+                    , var 56 85 1 "1d4"
+                    , var 86 100 2 "1d2"
+                    ]
+    in
+    boxxxy "Variations"
+        [ Html.table [] (header :: rows) ]
 
 
 baselineOutputBox : Model -> Html Msg
@@ -166,7 +249,9 @@ baselineInputBox model =
                         , selected = model.climate == climate
                         }
                     ]
-                , Html.td [ Html.Attributes.style "text-align" "right" ] [ Html.text (String.fromInt minLatitude ++ "°") ]
+                , Html.td
+                    [ Html.Attributes.style "text-align" "right" ]
+                    [ Html.text (String.fromInt minLatitude ++ "°") ]
                 , Html.td [] [ Html.text "–" ]
                 , Html.td [] [ Html.text (String.fromInt maxLatitude ++ "°") ]
                 , baselineCell model climate Winter
@@ -227,7 +312,10 @@ altitudeBox model =
             , altitudeCell
                 [ Html.Attributes.style "grid-column" "span 2" ]
                 Lowland
-                (altitudeToString model (Length.feet 1000) ++ " to " ++ altitudeToString model (Length.feet 5000))
+                (altitudeToString model (Length.feet 1000)
+                    ++ " to "
+                    ++ altitudeToString model (Length.feet 5000)
+                )
             , altitudeCell
                 [ Html.Attributes.style "grid-row" "span 3" ]
                 (Highland Altitude.Regular)
@@ -326,6 +414,30 @@ temperatureToString model temperature =
             format Temperature.inDegreesCelsius "C"
 
 
+deltaToString : Model -> Temperature.Delta -> String
+deltaToString model delta =
+    let
+        format : (Temperature.Delta -> Float) -> String -> String
+        format f l =
+            let
+                rounded : Int
+                rounded =
+                    round (f delta)
+            in
+            if rounded < 0 then
+                "−" ++ String.fromInt -rounded ++ "° " ++ l
+
+            else
+                String.fromInt rounded ++ "° " ++ l
+    in
+    case model.temperatureUnit of
+        Fahrenheit ->
+            format Temperature.inFahrenheitDegrees "F"
+
+        Celsius ->
+            format Temperature.inCelsiusDegrees "C"
+
+
 boxxxy : String -> List (Html Msg) -> Html Msg
 boxxxy label children =
     let
@@ -351,10 +463,7 @@ boxxxy label children =
                 , Html.Attributes.style "align-self" "start"
                 ]
                 [ Html.text label ]
-            , Html.div
-                [ Html.Attributes.style "width" "8px"
-                ]
-                []
+            , Html.div [ Html.Attributes.style "width" "8px" ] []
             ]
         , Html.div
             [ Html.Attributes.style "border" "1px solid black"
