@@ -4,8 +4,11 @@ import Altitude exposing (Altitude(..))
 import Baseline
 import Browser
 import Climate exposing (Climate(..))
+import Color
+import Frequency
 import Html exposing (Html)
 import Html.Attributes
+import Intensity
 import Length exposing (Length)
 import Season exposing (Season(..))
 import Temperature exposing (Temperature)
@@ -66,7 +69,56 @@ view model =
         , Html.Attributes.style "display" "flex"
         , Html.Attributes.style "gap" "8px"
         ]
-        [ boxxxy "Select an altitude"
+        [ boxxxy "Select your units"
+            [ Html.table
+                []
+                [ Html.tr []
+                    [ Html.td []
+                        [ Theme.toggle
+                            [ Html.Attributes.style "width" "100%" ]
+                            { label = "Celsius"
+                            , onPress = TemperatureUnit Celsius
+                            , selected = model.temperatureUnit == Celsius
+                            , background = Nothing
+                            , color = Nothing
+                            }
+                        ]
+                    , Html.td []
+                        [ Theme.toggle
+                            [ Html.Attributes.style "width" "100%" ]
+                            { label = "Fahrenheit"
+                            , onPress = TemperatureUnit Fahrenheit
+                            , selected = model.temperatureUnit == Fahrenheit
+                            , background = Nothing
+                            , color = Nothing
+                            }
+                        ]
+                    ]
+                , Html.tr []
+                    [ Html.td []
+                        [ Theme.toggle
+                            [ Html.Attributes.style "width" "100%" ]
+                            { label = "Meter"
+                            , onPress = MeasureUnit Meter
+                            , selected = model.measureUnit == Meter
+                            , background = Nothing
+                            , color = Nothing
+                            }
+                        ]
+                    , Html.td []
+                        [ Theme.toggle
+                            [ Html.Attributes.style "width" "100%" ]
+                            { label = "Foot"
+                            , onPress = MeasureUnit Foot
+                            , selected = model.measureUnit == Foot
+                            , background = Nothing
+                            , color = Nothing
+                            }
+                        ]
+                    ]
+                ]
+            ]
+        , boxxxy "Select an altitude"
             [ [ ( SeaLevel, "Below " ++ altitudeToString model (Length.feet 1000) )
               , ( Lowland, altitudeToString model (Length.feet 1000) ++ " to " ++ altitudeToString model (Length.feet 5000) )
               , ( Highland, "Above " ++ altitudeToString model (Length.feet 5000) )
@@ -150,6 +202,46 @@ view model =
                     )
                 |> Html.table []
             ]
+        , boxxxy "Baseline climate"
+            [ Html.table []
+                [ let
+                    temperature : Temperature
+                    temperature =
+                        Baseline.averageTemperature model
+
+                    label : String
+                    label =
+                        case model.temperatureUnit of
+                            Fahrenheit ->
+                                String.fromInt (round (Temperature.inDegreesFahrenheit temperature)) ++ "° F"
+
+                            Celsius ->
+                                String.fromInt (round (Temperature.inDegreesCelsius temperature)) ++ "° C"
+
+                    ( textColor, backgroundColor ) =
+                        Theme.temperatureColor temperature
+                  in
+                  Html.tr []
+                    [ Html.td [] [ Html.text "Average temperature" ]
+                    , Html.td
+                        [ Html.Attributes.style "color" (Color.toCssString textColor)
+                        , Html.Attributes.style "background" (Color.toCssString backgroundColor)
+                        , Html.Attributes.style "border" "1px solid black"
+                        ]
+                        [ Html.text label ]
+                    ]
+                , Html.tr []
+                    [ Html.td [] [ Html.text "Average precipitation frequency" ]
+                    , Html.td [ Html.Attributes.style "border" "1px solid black" ]
+                        [ Html.text (Frequency.toString (Baseline.precipitationFrequency model)) ]
+                    ]
+                , Html.tr []
+                    [ Html.td [] [ Html.text "Average precipitation intensity" ]
+                    , Html.td [ Html.Attributes.style "border" "1px solid black" ]
+                        [ Html.text (Intensity.toString (Baseline.precipitationIntensity model)) ]
+                    ]
+                ]
+            ]
         ]
 
 
@@ -157,23 +249,34 @@ boxxxy : String -> List (Html Msg) -> Html Msg
 boxxxy label children =
     Html.div
         [ Html.Attributes.style "display" "flex"
-        , Html.Attributes.style "align-items" "start"
         , Html.Attributes.style "flex-direction" "column"
         ]
         [ Html.div
-            [ Html.Attributes.style "transform" "translate(0,1px)"
-            , Html.Attributes.style "border-width" "1px 1px 0 1px"
-            , Html.Attributes.style "border-style" "solid"
-            , Html.Attributes.style "border-color" "black"
-            , Html.Attributes.style "background" "white"
-            , Html.Attributes.style "padding" "8px"
-            , Html.Attributes.style "border-radius" "8px 8px 0 0"
+            [ Html.Attributes.style "display" "flex"
+            , Html.Attributes.style "transform" "translate(0,1px)"
             ]
-            [ Html.text label ]
+            [ Html.div
+                [ Html.Attributes.style "border-width" "1px 1px 0 1px"
+                , Html.Attributes.style "border-style" "solid"
+                , Html.Attributes.style "border-color" "black"
+                , Html.Attributes.style "background" "white"
+                , Html.Attributes.style "padding" "8px"
+                , Html.Attributes.style "border-radius" "8px 8px 0 0"
+                , Html.Attributes.style "align-self" "start"
+                ]
+                [ Html.text label ]
+            , Html.div
+                [ Html.Attributes.style "width" "8px"
+                ]
+                []
+            ]
         , Html.div
             [ Html.Attributes.style "border" "1px solid black"
             , Html.Attributes.style "padding" "8px"
             , Html.Attributes.style "border-radius" "0 8px 8px 8px"
+            , Html.Attributes.style "display" "flex"
+            , Html.Attributes.style "flex-direction" "column"
+            , Html.Attributes.style "gap" "8px"
             ]
             children
         ]
@@ -186,7 +289,7 @@ altitudeToString model value =
             String.fromInt (round (Length.inFeet value)) ++ " ft."
 
         Meter ->
-            String.fromInt (round (Length.inMeters value) // 100 * 100) ++ " m"
+            String.fromInt (round (Length.inMeters value) // 100 * 100) ++ "m"
 
 
 temperatureCell : Model -> Climate -> Season -> Html Msg

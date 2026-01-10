@@ -1,4 +1,4 @@
-module Frequency exposing (Frequency(..), decrease, increase)
+module Frequency exposing (Frequency(..), decrease, increase, toString)
 
 
 type Frequency
@@ -45,3 +45,22 @@ decrease frequency =
 
         Constant ->
             Common
+
+
+toString : Frequency -> String
+toString frequency =
+    case frequency of
+        Drought ->
+            "Drought"
+
+        Rare ->
+            "Rare"
+
+        Intermittent ->
+            "Intermittent"
+
+        Common ->
+            "Common"
+
+        Constant ->
+            "Constant"

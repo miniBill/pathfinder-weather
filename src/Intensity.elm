@@ -1,4 +1,4 @@
-module Intensity exposing (Intensity(..), decrease, increase)
+module Intensity exposing (Intensity(..), decrease, increase, toString)
 
 
 type Intensity
@@ -38,3 +38,19 @@ decrease intensity =
 
         Torrential ->
             Heavy
+
+
+toString : Intensity -> String
+toString intensity =
+    case intensity of
+        Light ->
+            "Light"
+
+        Medium ->
+            "Medium"
+
+        Heavy ->
+            "Heavy"
+
+        Torrential ->
+            "Torrential"
