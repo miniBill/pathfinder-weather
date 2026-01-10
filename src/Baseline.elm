@@ -18,28 +18,37 @@ averageTemperature { climate, season, altitude } =
                 ( Cold, Winter ) ->
                     Temperature.degreesFahrenheit 20
 
+                ( Cold, Spring ) ->
+                    Temperature.degreesFahrenheit 30
+
                 ( Cold, Summer ) ->
                     Temperature.degreesFahrenheit 40
 
-                ( Cold, _ ) ->
+                ( Cold, Fall ) ->
                     Temperature.degreesFahrenheit 30
 
                 ( Temperate, Winter ) ->
                     Temperature.degreesFahrenheit 30
 
+                ( Temperate, Spring ) ->
+                    Temperature.degreesFahrenheit 60
+
                 ( Temperate, Summer ) ->
                     Temperature.degreesFahrenheit 80
 
-                ( Temperate, _ ) ->
+                ( Temperate, Fall ) ->
                     Temperature.degreesFahrenheit 60
 
                 ( Tropical, Winter ) ->
                     Temperature.degreesFahrenheit 50
 
+                ( Tropical, Spring ) ->
+                    Temperature.degreesFahrenheit 75
+
                 ( Tropical, Summer ) ->
                     Temperature.degreesFahrenheit 95
 
-                ( Tropical, _ ) ->
+                ( Tropical, Fall ) ->
                     Temperature.degreesFahrenheit 75
 
         adjustment : Temperature.Delta
@@ -92,28 +101,37 @@ precipitationFrequency { climate, season, altitude } =
                 ( Cold, Winter ) ->
                     Drought
 
+                ( Cold, Spring ) ->
+                    Rare
+
                 ( Cold, Summer ) ->
                     Intermittent
 
-                ( Cold, _ ) ->
+                ( Cold, Fall ) ->
                     Rare
 
                 ( Temperate, Winter ) ->
                     Rare
 
+                ( Temperate, Spring ) ->
+                    Intermittent
+
                 ( Temperate, Summer ) ->
                     Common
 
-                ( Temperate, _ ) ->
+                ( Temperate, Fall ) ->
                     Intermittent
 
                 ( Tropical, Winter ) ->
                     Intermittent
 
+                ( Tropical, Spring ) ->
+                    Constant
+
                 ( Tropical, Summer ) ->
                     Common
 
-                ( Tropical, _ ) ->
+                ( Tropical, Fall ) ->
                     Constant
     in
     case altitude of
