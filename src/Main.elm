@@ -258,7 +258,7 @@ view model =
                         )
                     ]
                 , Html.tr []
-                    [ Html.td [] [ Html.text "Average precipitation frequency" ]
+                    [ Html.td [] [ Html.text "Precipitation frequency" ]
                     , Html.td
                         [ Html.Attributes.style "border" "2px solid black"
                         , Html.Attributes.colspan 3
@@ -266,7 +266,7 @@ view model =
                         [ Html.text (Frequency.toString (Baseline.precipitationFrequency model)) ]
                     ]
                 , Html.tr []
-                    [ Html.td [] [ Html.text "Average precipitation intensity" ]
+                    [ Html.td [] [ Html.text "Precipitation intensity" ]
                     , Html.td
                         [ Html.Attributes.style "border" "2px solid black"
                         , Html.Attributes.colspan 3
