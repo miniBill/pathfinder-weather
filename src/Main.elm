@@ -237,7 +237,7 @@ view model =
                 , Html.tr []
                     [ Html.td [] [ Html.text "Average precipitation frequency" ]
                     , Html.td
-                        [ Html.Attributes.style "border" "1px solid black"
+                        [ Html.Attributes.style "border" "2px solid black"
                         , Html.Attributes.colspan 3
                         ]
                         [ Html.text (Frequency.toString (Baseline.precipitationFrequency model)) ]
@@ -245,7 +245,7 @@ view model =
                 , Html.tr []
                     [ Html.td [] [ Html.text "Average precipitation intensity" ]
                     , Html.td
-                        [ Html.Attributes.style "border" "1px solid black"
+                        [ Html.Attributes.style "border" "2px solid black"
                         , Html.Attributes.colspan 3
                         ]
                         [ Html.text (Intensity.toString (Baseline.precipitationIntensity model)) ]
@@ -253,27 +253,6 @@ view model =
                 ]
             ]
         ]
-
-
-temperatureCell : Model -> List (Attribute msg) -> Temperature -> Html msg
-temperatureCell model attrs temperature =
-    let
-        label : String
-        label =
-            temperatureToString model temperature
-
-        ( textColor, backgroundColor ) =
-            Theme.temperatureColor temperature
-    in
-    Html.td
-        ([ Html.Attributes.style "color" (Color.toCssString textColor)
-         , Html.Attributes.style "background" (Color.toCssString backgroundColor)
-         , Html.Attributes.style "border" "1px solid black"
-         , Html.Attributes.style "white-space" "nowrap"
-         ]
-            ++ attrs
-        )
-        [ Html.text label ]
 
 
 temperatureToString : Model -> Temperature -> String
@@ -353,6 +332,27 @@ altitudeToString model value =
             String.fromInt (round (Length.inMeters value) // 100 * 100) ++ "m"
 
 
+temperatureCell : Model -> List (Attribute msg) -> Temperature -> Html msg
+temperatureCell model attrs temperature =
+    let
+        label : String
+        label =
+            temperatureToString model temperature
+
+        ( textColor, backgroundColor, borderColor ) =
+            Theme.temperatureColor temperature
+    in
+    Html.td
+        ([ Html.Attributes.style "color" (Color.toCssString textColor)
+         , Html.Attributes.style "background" (Color.toCssString backgroundColor)
+         , Html.Attributes.style "border" ("2px solid " ++ Color.toCssString borderColor)
+         , Html.Attributes.style "white-space" "nowrap"
+         ]
+            ++ attrs
+        )
+        [ Html.text label ]
+
+
 baselineCell : Model -> Climate -> Season -> Html Msg
 baselineCell model climate season =
     let
@@ -368,12 +368,13 @@ baselineCell model climate season =
         label =
             temperatureToString model temperature
 
-        ( textColor, backgroundColor ) =
+        ( textColor, backgroundColor, borderColor ) =
             Theme.temperatureColor temperature
     in
     Html.td []
         [ Theme.toggle
             [ Html.Attributes.style "width" "100%"
+            , Html.Attributes.style "border" ("2px solid " ++ Color.toCssString borderColor)
             ]
             { color = Just textColor
             , background = Just backgroundColor

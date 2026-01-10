@@ -14,7 +14,7 @@ button attrs config =
         ([ Html.Attributes.style "color" "inherit"
          , Html.Attributes.style "background" "inherit"
          , Html.Attributes.style "weight" "bold"
-         , Html.Attributes.style "border" "1px solid black"
+         , Html.Attributes.style "border" "2px solid black"
          , Html.Events.onClick config.onPress
          ]
             ++ attrs
@@ -33,6 +33,12 @@ toggle :
         }
     -> Html msg
 toggle attrs config =
+    let
+        bgColor : Color
+        bgColor =
+            config.background
+                |> Maybe.withDefault Color.white
+    in
     Html.button
         ([ Html.Attributes.style "color"
             (config.color
@@ -41,49 +47,22 @@ toggle attrs config =
             )
          , Html.Attributes.style "background"
             (if config.selected then
-                config.background
-                    |> Maybe.map Color.toCssString
-                    |> Maybe.withDefault "transparent"
+                Color.toCssString bgColor
 
              else
                 let
-                    bgColor : String
-                    bgColor =
-                        let
-                            oklch : Oklch
-                            oklch =
-                                config.background
-                                    |> Maybe.withDefault Color.white
-                                    |> Oklch.fromColor
-                        in
-                        { oklch
-                            | chroma = oklch.chroma * 0.7
-                            , lightness = (oklch.lightness - 0.5) * 0.6 + 0.5
-                        }
-                            |> Oklch.toCssString
-
-                    stripeColor : String
-                    stripeColor =
-                        let
-                            oklch : Oklch
-                            oklch =
-                                config.background
-                                    |> Maybe.withDefault Color.white
-                                    |> Oklch.fromColor
-                        in
-                        { oklch | lightness = (oklch.lightness - 0.5) * 0.6 + 0.5 }
-                            |> Oklch.toCssString
+                    oklch : Oklch
+                    oklch =
+                        Oklch.fromColor bgColor
                 in
-                cssFunction "repeating-linear-gradient"
-                    [ "135deg"
-                    , bgColor
-                    , bgColor ++ " 10px"
-                    , stripeColor ++ " 10px"
-                    , stripeColor ++ " 11.44px"
-                    ]
+                { oklch
+                    | chroma = oklch.chroma * 0.7
+                    , lightness = (oklch.lightness - 0.5) * 0.6 + 0.5
+                }
+                    |> Oklch.toCssString
             )
          , Html.Attributes.style "weight" "bold"
-         , Html.Attributes.style "border" "1px solid black"
+         , Html.Attributes.style "border" "2px solid black"
          , Html.Events.onClick config.onPress
          ]
             ++ attrs
@@ -91,14 +70,9 @@ toggle attrs config =
         [ Html.text config.label ]
 
 
-cssFunction : String -> List String -> String
-cssFunction name args =
-    name ++ "(" ++ String.join ", " args ++ ")"
-
-
 {-| Source: <https://en.wikipedia.org/w/index.php?title=Module:Weather_box/colors&action=edit>
 -}
-temperatureColor : Temperature -> ( Color, Color )
+temperatureColor : Temperature -> ( Color, Color, Color )
 temperatureColor temperature =
     let
         val : Float
@@ -136,8 +110,24 @@ temperatureColor temperature =
 
             else
                 Color.black
+
+        backgroundColor : Color
+        backgroundColor =
+            Color.rgb red green blue
     in
-    ( textColor, Color.rgb red green blue )
+    ( textColor, backgroundColor, borderColor temperature )
+
+
+borderColor : Temperature -> Color
+borderColor temperature =
+    if temperature |> Temperature.lessThan (Temperature.degreesFahrenheit 40) then
+        Color.blue
+
+    else if temperature |> Temperature.greaterThan (Temperature.degreesFahrenheit 90) then
+        Color.red
+
+    else
+        Color.black
 
 
 {-| Source: <https://en.wikipedia.org/w/index.php?title=Module:Weather_box/colors&action=edit>
