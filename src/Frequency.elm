@@ -51,16 +51,16 @@ toString : Frequency -> String
 toString frequency =
     case frequency of
         Drought ->
-            "Drought"
+            "Drought - 5%"
 
         Rare ->
-            "Rare"
+            "Rare - 15%"
 
         Intermittent ->
-            "Intermittent"
+            "Intermittent - 30%"
 
         Common ->
-            "Common"
+            "Common - 60%"
 
         Constant ->
-            "Constant"
+            "Constant - 95%"

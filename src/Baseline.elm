@@ -96,9 +96,13 @@ averageTemperature { climate, season, altitude } =
     baseline |> Temperature.plus adjustment
 
 
-precipitationIntensity : { a | altitude : Altitude, climate : Climate } -> Intensity
-precipitationIntensity { altitude, climate } =
+precipitationIntensity : { a | altitude : Altitude, season : Season, climate : Climate } -> Intensity
+precipitationIntensity ({ altitude, climate } as model) =
     let
+        frequency : Frequency
+        frequency =
+            precipitationFrequency model
+
         baseline : Intensity
         baseline =
             case altitude of
@@ -110,16 +114,24 @@ precipitationIntensity { altitude, climate } =
 
                 Highland _ ->
                     Medium
+
+        climateAdjusted : Intensity
+        climateAdjusted =
+            case climate of
+                Cold _ ->
+                    Intensity.decrease baseline
+
+                Temperate ->
+                    baseline
+
+                Tropical ->
+                    Intensity.increase baseline
     in
-    case climate of
-        Cold _ ->
-            Intensity.decrease baseline
+    if frequency == Drought then
+        climateAdjusted |> Intensity.decrease |> Intensity.decrease
 
-        Temperate ->
-            baseline
-
-        Tropical ->
-            Intensity.increase baseline
+    else
+        climateAdjusted
 
 
 precipitationFrequency : { a | climate : Climate, season : Season, altitude : Altitude } -> Frequency
