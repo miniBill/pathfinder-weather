@@ -6,7 +6,7 @@ import Browser
 import Climate exposing (Climate(..))
 import Color
 import Frequency
-import Html exposing (Html)
+import Html exposing (Attribute, Html)
 import Html.Attributes
 import Intensity
 import Length exposing (Length)
@@ -170,10 +170,10 @@ view model =
                                     , selected = model.climate == climate
                                     }
                                 ]
-                            , temperatureCell model climate Winter
-                            , temperatureCell model climate Spring
-                            , temperatureCell model climate Summer
-                            , temperatureCell model climate Fall
+                            , baselineCell model climate Winter
+                            , baselineCell model climate Spring
+                            , baselineCell model climate Summer
+                            , baselineCell model climate Fall
                             ]
                     )
                 |> (::)
@@ -204,45 +204,89 @@ view model =
             ]
         , boxxxy "Baseline climate"
             [ Html.table []
-                [ let
-                    temperature : Temperature
-                    temperature =
-                        Baseline.averageTemperature model
-
-                    label : String
-                    label =
-                        case model.temperatureUnit of
-                            Fahrenheit ->
-                                String.fromInt (round (Temperature.inDegreesFahrenheit temperature)) ++ "° F"
-
-                            Celsius ->
-                                String.fromInt (round (Temperature.inDegreesCelsius temperature)) ++ "° C"
-
-                    ( textColor, backgroundColor ) =
-                        Theme.temperatureColor temperature
-                  in
-                  Html.tr []
-                    [ Html.td [] [ Html.text "Average temperature" ]
-                    , Html.td
-                        [ Html.Attributes.style "color" (Color.toCssString textColor)
-                        , Html.Attributes.style "background" (Color.toCssString backgroundColor)
-                        , Html.Attributes.style "border" "1px solid black"
-                        ]
-                        [ Html.text label ]
+                [ Html.tr []
+                    [ Html.td [] [ Html.text "Day temperature" ]
+                    , temperatureCell model
+                        [ Html.Attributes.colspan 3 ]
+                        (Baseline.averageTemperature model)
+                    ]
+                , Html.tr []
+                    [ Html.td [] [ Html.text "Night temperature (day - 3 - 2d6)" ]
+                    , temperatureCell model
+                        []
+                        (Baseline.averageTemperature model
+                            |> Temperature.plus (Temperature.fahrenheitDegrees -15)
+                        )
+                    , Html.td [] [ Html.text "–" ]
+                    , temperatureCell model
+                        []
+                        (Baseline.averageTemperature model
+                            |> Temperature.plus (Temperature.fahrenheitDegrees -5)
+                        )
                     ]
                 , Html.tr []
                     [ Html.td [] [ Html.text "Average precipitation frequency" ]
-                    , Html.td [ Html.Attributes.style "border" "1px solid black" ]
+                    , Html.td
+                        [ Html.Attributes.style "border" "1px solid black"
+                        , Html.Attributes.colspan 3
+                        ]
                         [ Html.text (Frequency.toString (Baseline.precipitationFrequency model)) ]
                     ]
                 , Html.tr []
                     [ Html.td [] [ Html.text "Average precipitation intensity" ]
-                    , Html.td [ Html.Attributes.style "border" "1px solid black" ]
+                    , Html.td
+                        [ Html.Attributes.style "border" "1px solid black"
+                        , Html.Attributes.colspan 3
+                        ]
                         [ Html.text (Intensity.toString (Baseline.precipitationIntensity model)) ]
                     ]
                 ]
             ]
         ]
+
+
+temperatureCell : Model -> List (Attribute msg) -> Temperature -> Html msg
+temperatureCell model attrs temperature =
+    let
+        label : String
+        label =
+            temperatureToString model temperature
+
+        ( textColor, backgroundColor ) =
+            Theme.temperatureColor temperature
+    in
+    Html.td
+        ([ Html.Attributes.style "color" (Color.toCssString textColor)
+         , Html.Attributes.style "background" (Color.toCssString backgroundColor)
+         , Html.Attributes.style "border" "1px solid black"
+         ]
+            ++ attrs
+        )
+        [ Html.text label ]
+
+
+temperatureToString : Model -> Temperature -> String
+temperatureToString model temperature =
+    let
+        format : (Temperature -> Float) -> String -> String
+        format f l =
+            let
+                rounded : Int
+                rounded =
+                    round (f temperature)
+            in
+            if rounded < 0 then
+                "−" ++ String.fromInt -rounded ++ "° " ++ l
+
+            else
+                String.fromInt rounded ++ "° " ++ l
+    in
+    case model.temperatureUnit of
+        Fahrenheit ->
+            format Temperature.inDegreesFahrenheit "F"
+
+        Celsius ->
+            format Temperature.inDegreesCelsius "C"
 
 
 boxxxy : String -> List (Html Msg) -> Html Msg
@@ -292,8 +336,8 @@ altitudeToString model value =
             String.fromInt (round (Length.inMeters value) // 100 * 100) ++ "m"
 
 
-temperatureCell : Model -> Climate -> Season -> Html Msg
-temperatureCell model climate season =
+baselineCell : Model -> Climate -> Season -> Html Msg
+baselineCell model climate season =
     let
         temperature : Temperature
         temperature =
@@ -305,12 +349,7 @@ temperatureCell model climate season =
 
         label : String
         label =
-            case model.temperatureUnit of
-                Fahrenheit ->
-                    String.fromInt (round (Temperature.inDegreesFahrenheit temperature)) ++ "° F"
-
-                Celsius ->
-                    String.fromInt (round (Temperature.inDegreesCelsius temperature)) ++ "° C"
+            temperatureToString model temperature
 
         ( textColor, backgroundColor ) =
             Theme.temperatureColor temperature
