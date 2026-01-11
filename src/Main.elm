@@ -93,6 +93,7 @@ view model =
         , variationsBox model
         , currentTemperatureBox model
         , resultingPrecipitation model
+        , thunderstormBox model
         ]
 
 
@@ -109,10 +110,6 @@ resultingPrecipitation model =
     let
         ( _, probability ) =
             Frequency.toString (Baseline.precipitationFrequency model)
-
-        intensity : Intensity
-        intensity =
-            Baseline.precipitationIntensity model
 
         row : Row -> Html msg
         row { percentMin, percentMax, precipitation, duration } =
@@ -136,99 +133,18 @@ resultingPrecipitation model =
                 , Html.th [] [ Html.text "Duration" ]
                 ]
 
-        maybeSleet : Precipitation -> Precipitation
-        maybeSleet precipitation =
-            if model.currentTemperature == Above40 then
-                precipitation
-
-            else
-                Sleet
-
         data : List Row
         data =
-            case ( intensity, model.currentTemperature /= Below32 ) of
-                ( Light, True ) ->
-                    [ Row 1 20 LightFog "1d8"
-                    , Row 21 40 MediumFog "1d6"
-                    , Row 41 50 Drizzle "1d4"
-                    , Row 51 75 Drizzle "2d12"
-                    , Row 76 90 LightRain "1d4"
-                    , Row 91 100 (maybeSleet LightRain) "1"
-                    ]
-
-                ( Light, False ) ->
-                    [ Row 1 20 LightFog "1d6"
-                    , Row 21 40 LightFog "1d8"
-                    , Row 41 50 MediumFog "1d4"
-                    , Row 51 60 LightSnow "1"
-                    , Row 61 75 LightSnow "1d4"
-                    , Row 76 100 LightSnow "2d12"
-                    ]
-
-                ( Medium, True ) ->
-                    [ Row 1 10 MediumFog "1d8"
-                    , Row 11 20 MediumFog "1d12"
-                    , Row 21 30 HeavyFog "1d4"
-                    , Row 31 35 Rain "1d4"
-                    , Row 36 70 Rain "1d8"
-                    , Row 71 90 Rain "2d12"
-                    , Row 91 100 (maybeSleet Rain) "1d4"
-                    ]
-
-                ( Medium, False ) ->
-                    [ Row 1 10 MediumFog "1d6"
-                    , Row 11 20 MediumFog "1d8"
-                    , Row 21 30 HeavyFog "1d4"
-                    , Row 31 50 MediumSnow "1d4"
-                    , Row 51 90 MediumSnow "1d8"
-                    , Row 91 100 MediumSnow "2d12"
-                    ]
-
-                ( Heavy, True ) ->
-                    [ Row 1 10 HeavyFog "1d8"
-                    , Row 11 20 HeavyFog "2d6"
-                    , Row 21 50 HeavyRain "1d12"
-                    , Row 51 70 HeavyRain "2d12"
-                    , Row 71 85 (maybeSleet HeavyRain) "1d8"
-                    , Row 86 90 Thunderstorm "1"
-                    , Row 91 100 Thunderstorm "1d3"
-                    ]
-
-                ( Heavy, False ) ->
-                    [ Row 1 10 MediumFog "1d8"
-                    , Row 11 20 HeavyFog "2d6"
-                    , Row 21 60 LightSnow "2d12"
-                    , Row 61 90 MediumSnow "1d8"
-                    , Row 91 100 HeavySnow "1d6"
-                    ]
-
-                ( Torrential, True ) ->
-                    [ Row 1 5 HeavyFog "1d8"
-                    , Row 6 10 HeavyFog "2d6"
-                    , Row 11 30 HeavyRain "2d6"
-                    , Row 31 60 HeavyRain "2d12"
-                    , Row 61 80 (maybeSleet HeavyRain) "2d6"
-                    , Row 81 95 Thunderstorm "1d3"
-                    , Row 96 100 Thunderstorm "1d6"
-                    ]
-
-                ( Torrential, False ) ->
-                    [ Row 1 5 HeavyFog "1d8"
-                    , Row 6 10 HeavyFog "2d6"
-                    , Row 11 50 HeavySnow "1d4"
-                    , Row 51 90 HeavySnow "1d8"
-                    , Row 91 100 HeavySnow "2d12"
-                    ]
+            precipitationData model
     in
-    boxxxy "Result"
-        [ Html.Attributes.style "max-width" "480px" ]
+    boxxxy "Precipitation table"
         [ Html.p []
             [ Html.text ("Roll the daily probability (" ++ String.fromInt probability ++ "%).")
             ]
         , Html.p []
             [ Html.text "If there is precipitation, roll a random starting hour."
             ]
-        , Html.table [ Html.Attributes.style "margin" "auto" ] (header :: List.map row data)
+        , Html.table [] (header :: List.map row data)
         , data
             |> List.map .precipitation
             |> List.Extra.unique
@@ -240,47 +156,142 @@ resultingPrecipitation model =
                         ]
                 )
             |> Html.div []
-        , if List.any (\dataRow -> dataRow.precipitation == Thunderstorm) data then
-            Html.div [] (thunderstormInfo model)
-
-          else
-            Html.text ""
         ]
 
 
-thunderstormInfo : Model -> List (Html msg)
-thunderstormInfo model =
+precipitationData : Model -> List Row
+precipitationData model =
     let
-        header : Html msg
-        header =
-            Html.tr []
-                [ Html.th [ Html.Attributes.colspan 3 ] [ Html.text "d%" ]
-                , Html.th [] [ Html.text "Wind strength" ]
-                ]
+        maybeSleet : Precipitation -> Precipitation
+        maybeSleet precipitation =
+            if model.currentTemperature == Above40 then
+                precipitation
 
+            else
+                Sleet
+
+        intensity : Intensity
+        intensity =
+            Baseline.precipitationIntensity model
+    in
+    case ( intensity, model.currentTemperature /= Below32 ) of
+        ( Light, True ) ->
+            [ Row 1 20 LightFog "1d8"
+            , Row 21 40 MediumFog "1d6"
+            , Row 41 50 Drizzle "1d4"
+            , Row 51 75 Drizzle "2d12"
+            , Row 76 90 LightRain "1d4"
+            , Row 91 100 (maybeSleet LightRain) "1"
+            ]
+
+        ( Light, False ) ->
+            [ Row 1 20 LightFog "1d6"
+            , Row 21 40 LightFog "1d8"
+            , Row 41 50 MediumFog "1d4"
+            , Row 51 60 LightSnow "1"
+            , Row 61 75 LightSnow "1d4"
+            , Row 76 100 LightSnow "2d12"
+            ]
+
+        ( Medium, True ) ->
+            [ Row 1 10 MediumFog "1d8"
+            , Row 11 20 MediumFog "1d12"
+            , Row 21 30 HeavyFog "1d4"
+            , Row 31 35 Rain "1d4"
+            , Row 36 70 Rain "1d8"
+            , Row 71 90 Rain "2d12"
+            , Row 91 100 (maybeSleet Rain) "1d4"
+            ]
+
+        ( Medium, False ) ->
+            [ Row 1 10 MediumFog "1d6"
+            , Row 11 20 MediumFog "1d8"
+            , Row 21 30 HeavyFog "1d4"
+            , Row 31 50 MediumSnow "1d4"
+            , Row 51 90 MediumSnow "1d8"
+            , Row 91 100 MediumSnow "2d12"
+            ]
+
+        ( Heavy, True ) ->
+            [ Row 1 10 HeavyFog "1d8"
+            , Row 11 20 HeavyFog "2d6"
+            , Row 21 50 HeavyRain "1d12"
+            , Row 51 70 HeavyRain "2d12"
+            , Row 71 85 (maybeSleet HeavyRain) "1d8"
+            , Row 86 90 Thunderstorm "1"
+            , Row 91 100 Thunderstorm "1d3"
+            ]
+
+        ( Heavy, False ) ->
+            [ Row 1 10 MediumFog "1d8"
+            , Row 11 20 HeavyFog "2d6"
+            , Row 21 60 LightSnow "2d12"
+            , Row 61 90 MediumSnow "1d8"
+            , Row 91 100 HeavySnow "1d6"
+            ]
+
+        ( Torrential, True ) ->
+            [ Row 1 5 HeavyFog "1d8"
+            , Row 6 10 HeavyFog "2d6"
+            , Row 11 30 HeavyRain "2d6"
+            , Row 31 60 HeavyRain "2d12"
+            , Row 61 80 (maybeSleet HeavyRain) "2d6"
+            , Row 81 95 Thunderstorm "1d3"
+            , Row 96 100 Thunderstorm "1d6"
+            ]
+
+        ( Torrential, False ) ->
+            [ Row 1 5 HeavyFog "1d8"
+            , Row 6 10 HeavyFog "2d6"
+            , Row 11 50 HeavySnow "1d4"
+            , Row 51 90 HeavySnow "1d8"
+            , Row 91 100 HeavySnow "2d12"
+            ]
+
+
+thunderstormBox : Model -> Html Msg
+thunderstormBox model =
+    let
         row : { percentMin : Int, percentMax : Int, strength : String } -> Html msg
         row { percentMin, percentMax, strength } =
             percentRow percentMin percentMax [ Html.td [] [ Html.text strength ] ]
 
-        rows : List (Html msg)
-        rows =
-            [ row { percentMin = 1, percentMax = 50, strength = "Strong winds" }
-            , row { percentMin = 51, percentMax = 90, strength = "Severe winds" }
-            , row { percentMin = 91, percentMax = 100, strength = "Windstorm" }
-            ]
+        data : List Row
+        data =
+            precipitationData model
     in
-    [ Html.table [ Html.Attributes.style "margin" "auto" ] (header :: rows)
-    , Html.p []
-        [ Html.text "In addition, there is a 40% chance that a thunderstorm features hail either up to an hour before or during the storm. An even greater danger presented by a thunderstorm is the lightning that occurs during the storm. These electrical discharges, generated by the roiling butts, can pose a hazard to creatures that do not have proper shelters, especially creatures clad in metal armor. Every 10 minutes during a thunderstorm, a bolt of lightning strikes an unsheltered creature at random (though this can strike wildlife as easily as PCs). A creature struck by this lightning must succeed a DC 18 Reflex saving throw or take 10d8 points of electricity damage (a successful saving throw halves the damage). Creatures in metal armor take a –4 penalty on the Reflex saving throw."
-        ]
-    , Html.p []
-        [ Html.text
-            ("There is a 10% chance that a thunderstorm with winds of windstorm strength also generates a tornado, while thunderstorms with windstorm-strength winds in temperatures higher than "
-                ++ temperatureToString model (Temperature.degreesFahrenheit 85)
-                ++ " also have a 20% chance of being a precursor to a hurricane. There is a 20% chance that a thunderstorm of any strength in the desert also generates a haboob."
-            )
-        ]
-    ]
+    if List.any (\dataRow -> dataRow.precipitation == Thunderstorm) data then
+        let
+            header : Html msg
+            header =
+                Html.tr []
+                    [ Html.th [ Html.Attributes.colspan 3 ] [ Html.text "d%" ]
+                    , Html.th [] [ Html.text "Wind strength" ]
+                    ]
+
+            rows : List (Html msg)
+            rows =
+                [ row { percentMin = 1, percentMax = 50, strength = "Strong winds" }
+                , row { percentMin = 51, percentMax = 90, strength = "Severe winds" }
+                , row { percentMin = 91, percentMax = 100, strength = "Windstorm" }
+                ]
+        in
+        boxxxy "Thunderstorms"
+            [ Html.table [] (header :: rows)
+            , Html.p []
+                [ Html.text "In addition, there is a 40% chance that a thunderstorm features hail either up to an hour before or during the storm. An even greater danger presented by a thunderstorm is the lightning that occurs during the storm. These electrical discharges, generated by the roiling butts, can pose a hazard to creatures that do not have proper shelters, especially creatures clad in metal armor. Every 10 minutes during a thunderstorm, a bolt of lightning strikes an unsheltered creature at random (though this can strike wildlife as easily as PCs). A creature struck by this lightning must succeed a DC 18 Reflex saving throw or take 10d8 points of electricity damage (a successful saving throw halves the damage). Creatures in metal armor take a –4 penalty on the Reflex saving throw."
+                ]
+            , Html.p []
+                [ Html.text
+                    ("There is a 10% chance that a thunderstorm with winds of windstorm strength also generates a tornado, while thunderstorms with windstorm-strength winds in temperatures higher than "
+                        ++ temperatureToString model (Temperature.degreesFahrenheit 85)
+                        ++ " also have a 20% chance of being a precursor to a hurricane. There is a 20% chance that a thunderstorm of any strength in the desert also generates a haboob."
+                    )
+                ]
+            ]
+
+    else
+        Html.text ""
 
 
 percentRow : Int -> Int -> List (Html msg) -> Html msg
@@ -370,9 +381,7 @@ variationsBox model =
                     , var 86 100 2 "1d2"
                     ]
     in
-    boxxxy "Variations"
-        []
-        [ Html.table [] (header :: rows) ]
+    boxxxy "Variations" [ Html.table [] (header :: rows) ]
 
 
 currentTemperatureBox : Model -> Html Msg
@@ -387,7 +396,6 @@ currentTemperatureBox model =
             Temperature.degreesFahrenheit 32
     in
     boxxxy "Current temperature"
-        []
         [ Theme.toggle []
             { onPress = ClickedCurrentTemperature Above40
             , selected = model.currentTemperature == Above40
@@ -434,7 +442,6 @@ baselineOutputBox model =
                 )
     in
     boxxxy "Baseline climate"
-        []
         [ [ header "Temperature"
           , row "Day"
                 [ Baseline.averageTemperature model
@@ -530,7 +537,6 @@ baselineInputBox model =
                 ]
     in
     boxxxy "Select a baseline"
-        []
         [ Html.table
             [ Html.Attributes.style "white-space" "nowrap" ]
             [ header
@@ -571,7 +577,6 @@ altitudeBox model =
                 ]
     in
     boxxxy "Select an altitude"
-        []
         [ Html.div
             [ Html.Attributes.style "display" "grid"
             , Html.Attributes.style "grid-template-columns" "auto auto auto"
@@ -620,7 +625,6 @@ altitudeBox model =
 unitsBox : Model -> Html Msg
 unitsBox model =
     boxxxy "Select your units"
-        []
         [ Html.table
             []
             [ Html.tr []
@@ -719,19 +723,18 @@ deltaToString model delta =
             format Temperature.inCelsiusDegrees "C"
 
 
-boxxxy : String -> List (Attribute Msg) -> List (Html Msg) -> Html Msg
-boxxxy label attrs children =
+boxxxy : String -> List (Html Msg) -> Html Msg
+boxxxy label children =
     let
         backgroundColor : String
         backgroundColor =
             Oklch.toCssString (Oklch.oklch 0.9 0.04 0.75)
     in
     Html.div
-        ([ Html.Attributes.style "display" "flex"
-         , Html.Attributes.style "flex-direction" "column"
-         ]
-            ++ attrs
-        )
+        [ Html.Attributes.style "display" "flex"
+        , Html.Attributes.style "flex-direction" "column"
+        , Html.Attributes.style "max-width" "480px"
+        ]
         [ Html.div
             [ Html.Attributes.style "display" "flex"
             , Html.Attributes.style "transform" "translate(0,1px)"
@@ -744,6 +747,7 @@ boxxxy label attrs children =
                 , Html.Attributes.style "padding" "8px"
                 , Html.Attributes.style "border-radius" "8px 8px 0 0"
                 , Html.Attributes.style "align-self" "start"
+                , Html.Attributes.style "font-weight" "bold"
                 ]
                 [ Html.text label ]
             , Html.div [ Html.Attributes.style "width" "8px" ] []
