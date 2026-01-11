@@ -9,6 +9,7 @@ import Color.Oklch as Oklch
 import Frequency
 import Html exposing (Attribute, Html)
 import Html.Attributes
+import Html.Events
 import Intensity
 import Length exposing (Length)
 import Season exposing (Season(..))
@@ -22,6 +23,8 @@ type alias Model =
     , climate : Climate
     , season : Season
     , altitude : Altitude
+    , temperature : Temperature
+    , isDesert : Bool
     }
 
 
@@ -42,6 +45,7 @@ type Msg
     | ClickedSeason Season
     | ClickedClimate Climate
     | ClickedAltitude Altitude
+    | ClickedIsDesert Bool
 
 
 main : Program () Model Msg
@@ -60,6 +64,8 @@ init =
     , climate = Temperate
     , season = Spring
     , altitude = Lowland
+    , temperature = Temperature.degreesFahrenheit 32
+    , isDesert = False
     }
 
 
@@ -269,6 +275,15 @@ baselineInputBox model =
             , baselineRow (Cold Climate.Regular) 60 82
             , baselineRow (Cold Arctic) 82 86
             , baselineRow (Cold Polar) 86 90
+            ]
+        , Html.label []
+            [ Html.input
+                [ Html.Attributes.type_ "checkbox"
+                , Html.Attributes.checked model.isDesert
+                , Html.Events.onCheck ClickedIsDesert
+                ]
+                []
+            , Html.text " Is a desert"
             ]
         ]
 
@@ -544,6 +559,12 @@ baselineCell model climate season =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
+        TemperatureUnit temperatureUnit ->
+            { model | temperatureUnit = temperatureUnit }
+
+        MeasureUnit measureUnit ->
+            { model | measureUnit = measureUnit }
+
         ClickedBaseline climate season ->
             { model
                 | climate = climate
@@ -559,8 +580,5 @@ update msg model =
         ClickedAltitude altitude ->
             { model | altitude = altitude }
 
-        TemperatureUnit temperatureUnit ->
-            { model | temperatureUnit = temperatureUnit }
-
-        MeasureUnit measureUnit ->
-            { model | measureUnit = measureUnit }
+        ClickedIsDesert isDesert ->
+            { model | isDesert = isDesert }

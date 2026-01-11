@@ -96,7 +96,7 @@ averageTemperature { climate, season, altitude } =
     baseline |> Temperature.plus adjustment
 
 
-precipitationIntensity : { a | altitude : Altitude, season : Season, climate : Climate } -> Intensity
+precipitationIntensity : { a | altitude : Altitude, season : Season, climate : Climate, isDesert : Bool } -> Intensity
 precipitationIntensity ({ altitude, climate } as model) =
     let
         frequency : Frequency
@@ -134,54 +134,58 @@ precipitationIntensity ({ altitude, climate } as model) =
         climateAdjusted
 
 
-precipitationFrequency : { a | climate : Climate, season : Season, altitude : Altitude } -> Frequency
-precipitationFrequency { climate, season, altitude } =
-    let
-        baseline : Frequency
-        baseline =
-            case ( climate, season ) of
-                ( Cold _, Winter ) ->
-                    Drought
+precipitationFrequency : { a | climate : Climate, season : Season, altitude : Altitude, isDesert : Bool } -> Frequency
+precipitationFrequency { climate, season, altitude, isDesert } =
+    if isDesert then
+        Drought
 
-                ( Cold _, Spring ) ->
-                    Rare
+    else
+        let
+            baseline : Frequency
+            baseline =
+                case ( climate, season ) of
+                    ( Cold _, Winter ) ->
+                        Drought
 
-                ( Cold _, Summer ) ->
-                    Intermittent
+                    ( Cold _, Spring ) ->
+                        Rare
 
-                ( Cold _, Fall ) ->
-                    Rare
+                    ( Cold _, Summer ) ->
+                        Intermittent
 
-                ( Temperate, Winter ) ->
-                    Rare
+                    ( Cold _, Fall ) ->
+                        Rare
 
-                ( Temperate, Spring ) ->
-                    Intermittent
+                    ( Temperate, Winter ) ->
+                        Rare
 
-                ( Temperate, Summer ) ->
-                    Common
+                    ( Temperate, Spring ) ->
+                        Intermittent
 
-                ( Temperate, Fall ) ->
-                    Intermittent
+                    ( Temperate, Summer ) ->
+                        Common
 
-                ( Tropical, Winter ) ->
-                    Intermittent
+                    ( Temperate, Fall ) ->
+                        Intermittent
 
-                ( Tropical, Spring ) ->
-                    Constant
+                    ( Tropical, Winter ) ->
+                        Intermittent
 
-                ( Tropical, Summer ) ->
-                    Common
+                    ( Tropical, Spring ) ->
+                        Constant
 
-                ( Tropical, Fall ) ->
-                    Constant
-    in
-    case altitude of
-        SeaLevel ->
-            baseline
+                    ( Tropical, Summer ) ->
+                        Common
 
-        Lowland ->
-            baseline
+                    ( Tropical, Fall ) ->
+                        Constant
+        in
+        case altitude of
+            SeaLevel ->
+                baseline
 
-        Highland _ ->
-            Frequency.decrease baseline
+            Lowland ->
+                baseline
+
+            Highland _ ->
+                Frequency.decrease baseline
