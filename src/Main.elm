@@ -23,7 +23,7 @@ type alias Model =
     , climate : Climate
     , season : Season
     , altitude : Altitude
-    , temperature : Temperature
+    , aboveFreezing : Bool
     , isDesert : Bool
     }
 
@@ -46,6 +46,8 @@ type Msg
     | ClickedClimate Climate
     | ClickedAltitude Altitude
     | ClickedIsDesert Bool
+    | ClickedAboveFreezing
+    | ClickedBelowFreezing
 
 
 main : Program () Model Msg
@@ -64,7 +66,7 @@ init =
     , climate = Temperate
     , season = Spring
     , altitude = Lowland
-    , temperature = Temperature.degreesFahrenheit 32
+    , aboveFreezing = True
     , isDesert = False
     }
 
@@ -82,7 +84,19 @@ view model =
         , baselineInputBox model
         , baselineOutputBox model
         , variationsBox model
+        , currentTemperatureBox model
+        , resultingPrecipitation model
         ]
+
+
+resultingPrecipitation : Model -> Html Msg
+resultingPrecipitation model =
+    let
+        intensity =
+            Baseline.precipitationIntensity model
+    in
+    boxxxy "Result"
+        [ Html.text "TODO" ]
 
 
 variationsBox : Model -> Html Msg
@@ -167,48 +181,90 @@ variationsBox model =
         [ Html.table [] (header :: rows) ]
 
 
+currentTemperatureBox : Model -> Html Msg
+currentTemperatureBox model =
+    let
+        freezing : String
+        freezing =
+            temperatureToString model (Temperature.degreesCelsius 0)
+    in
+    boxxxy "Current temperature"
+        [ Theme.toggle []
+            { onPress = ClickedAboveFreezing
+            , selected = model.aboveFreezing
+            , label = "Above freezing (" ++ freezing ++ ")"
+            , color = Nothing
+            , background = Nothing
+            }
+        , Theme.toggle []
+            { onPress = ClickedBelowFreezing
+            , selected = not model.aboveFreezing
+            , label = "Below freezing (" ++ freezing ++ ")"
+            , color = Nothing
+            , background = Nothing
+            }
+        ]
+
+
 baselineOutputBox : Model -> Html Msg
 baselineOutputBox model =
+    let
+        ( frequencyString, frequencyPercent ) =
+            Frequency.toString (Baseline.precipitationFrequency model)
+
+        header : String -> Html msg
+        header label =
+            Html.tr []
+                [ Html.th
+                    [ Html.Attributes.colspan 4 ]
+                    [ Html.text label ]
+                ]
+
+        row : String -> List (Html msg) -> Html msg
+        row label cells =
+            Html.tr []
+                (Html.td [] [ Html.text label ]
+                    :: cells
+                )
+    in
     boxxxy "Baseline climate"
-        [ [ ( "Day temperature"
-            , [ Baseline.averageTemperature model
+        [ [ header "Temperature"
+          , row "Day"
+                [ Baseline.averageTemperature model
                     |> temperatureCell model [ Html.Attributes.colspan 3 ]
-              ]
-            )
-          , ( "Night temperature"
-            , [ Baseline.averageTemperature model
+                ]
+          , row "Night"
+                [ Baseline.averageTemperature model
                     |> Temperature.plus (Temperature.fahrenheitDegrees -15)
                     |> temperatureCell model []
-              , Html.td [] [ Html.text "to" ]
-              , Baseline.averageTemperature model
+                , Html.td [] [ Html.text "to" ]
+                , Baseline.averageTemperature model
                     |> Temperature.plus (Temperature.fahrenheitDegrees -5)
                     |> temperatureCell model []
-              ]
-            )
-          , ( "Precipitation frequency"
-            , [ [ Html.text (Frequency.toString (Baseline.precipitationFrequency model)) ]
+                ]
+          , header "Precipitation"
+          , row "Intensity"
+                [ [ Html.text (Intensity.toString (Baseline.precipitationIntensity model)) ]
                     |> Html.td
                         [ Html.Attributes.style "border" "2px solid black"
                         , Html.Attributes.colspan 3
                         ]
-              ]
-            )
-          , ( "Precipitation intensity"
-            , [ [ Html.text (Intensity.toString (Baseline.precipitationIntensity model)) ]
+                ]
+          , row "Frequency"
+                [ [ Html.text frequencyString ]
                     |> Html.td
                         [ Html.Attributes.style "border" "2px solid black"
                         , Html.Attributes.colspan 3
                         ]
-              ]
-            )
+                ]
+          , row "Probability"
+                [ [ Html.text (String.fromInt frequencyPercent ++ "% / day") ]
+                    |> Html.td
+                        [ Html.Attributes.style "border" "2px solid black"
+                        , Html.Attributes.colspan 3
+                        ]
+                ]
           ]
-            |> List.map
-                (\( label, cells ) ->
-                    Html.tr []
-                        (Html.td [] [ Html.text label ]
-                            :: cells
-                        )
-                )
             |> Html.table []
         ]
 
@@ -518,6 +574,7 @@ temperatureCell model attrs temperature =
          , Html.Attributes.style "background" (Color.toCssString backgroundColor)
          , Html.Attributes.style "border" ("2px solid " ++ Color.toCssString borderColor)
          , Html.Attributes.style "white-space" "nowrap"
+         , Html.Attributes.style "text-align" "center"
          ]
             ++ attrs
         )
@@ -582,3 +639,9 @@ update msg model =
 
         ClickedIsDesert isDesert ->
             { model | isDesert = isDesert }
+
+        ClickedAboveFreezing ->
+            { model | aboveFreezing = True }
+
+        ClickedBelowFreezing ->
+            { model | aboveFreezing = False }

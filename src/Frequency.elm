@@ -47,20 +47,20 @@ decrease frequency =
             Common
 
 
-toString : Frequency -> String
+toString : Frequency -> ( String, Int )
 toString frequency =
     case frequency of
         Drought ->
-            "Drought - 5%"
+            ( "Drought", 5 )
 
         Rare ->
-            "Rare - 15%"
+            ( "Rare", 15 )
 
         Intermittent ->
-            "Intermittent - 30%"
+            ( "Intermittent", 30 )
 
         Common ->
-            "Common - 60%"
+            ( "Common", 60 )
 
         Constant ->
-            "Constant - 95%"
+            ( "Constant", 95 )
