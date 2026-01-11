@@ -9,7 +9,8 @@ html {
     box-sizing: inherit;
 }
 
-body {
+body,
+p {
     margin: 0;
     padding: 0;
 }

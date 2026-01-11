@@ -10,7 +10,7 @@ import Frequency
 import Html exposing (Attribute, Html)
 import Html.Attributes
 import Html.Events
-import Intensity
+import Intensity exposing (Intensity(..))
 import Length exposing (Length)
 import Season exposing (Season(..))
 import Temperature exposing (Temperature)
@@ -23,9 +23,15 @@ type alias Model =
     , climate : Climate
     , season : Season
     , altitude : Altitude
-    , aboveFreezing : Bool
+    , currentTemperature : TemperatureRange
     , isDesert : Bool
     }
+
+
+type TemperatureRange
+    = Below32
+    | Between32And40
+    | Above40
 
 
 type TemperatureUnit
@@ -46,8 +52,7 @@ type Msg
     | ClickedClimate Climate
     | ClickedAltitude Altitude
     | ClickedIsDesert Bool
-    | ClickedAboveFreezing
-    | ClickedBelowFreezing
+    | ClickedCurrentTemperature TemperatureRange
 
 
 main : Program () Model Msg
@@ -66,7 +71,7 @@ init =
     , climate = Temperate
     , season = Spring
     , altitude = Lowland
-    , aboveFreezing = True
+    , currentTemperature = Above40
     , isDesert = False
     }
 
@@ -92,11 +97,158 @@ view model =
 resultingPrecipitation : Model -> Html Msg
 resultingPrecipitation model =
     let
+        ( _, probability ) =
+            Frequency.toString (Baseline.precipitationFrequency model)
+
+        intensity : Intensity
         intensity =
             Baseline.precipitationIntensity model
+
+        row : Int -> Int -> String -> String -> Html msg
+        row pctMin pctMax label duration =
+            Html.tr []
+                [ Html.td
+                    [ Html.Attributes.style "text-align" "right" ]
+                    [ Html.text (String.fromInt pctMin) ]
+                , Html.td [] [ Html.text "–" ]
+                , Html.td [] [ Html.text (String.fromInt pctMax) ]
+                , Html.td [] [ Html.text label ]
+                , Html.td []
+                    [ if duration == "1" then
+                        Html.text (duration ++ " hour")
+
+                      else
+                        Html.text (duration ++ " hours")
+                    ]
+                ]
+
+        header : Html msg
+        header =
+            Html.tr []
+                [ Html.th [ Html.Attributes.colspan 3 ] [ Html.text "d%" ]
+                , Html.th [] [ Html.text "Precipitation" ]
+                , Html.th [] [ Html.text "Duration" ]
+                ]
+
+        data : List (Html msg)
+        data =
+            case ( intensity, model.currentTemperature /= Below32 ) of
+                ( Light, True ) ->
+                    [ row 1 20 "Light fog" "1d8"
+                    , row 21 40 "Medium fog" "1d6"
+                    , row 41 50 "Drizzle" "1d4"
+                    , row 51 75 "Drizzle" "2d12"
+                    , row 76 90 "Light rain" "1d4"
+                    , row 91
+                        100
+                        (if model.currentTemperature == Above40 then
+                            "Light rain"
+
+                         else
+                            "Sleet"
+                        )
+                        "1"
+                    ]
+
+                ( Light, False ) ->
+                    [ row 1 20 "Light fog" "1d6"
+                    , row 21 40 "Light fog" "1d8"
+                    , row 41 50 "Medium fog" "1d4"
+                    , row 51 60 "Light snow" "1"
+                    , row 61 75 "Light snow" "1d4"
+                    , row 76 100 "Light snow" "2d12"
+                    ]
+
+                ( Medium, True ) ->
+                    [ row 1 10 "Medium fog" "1d8"
+                    , row 11 20 "Medium fog" "1d12"
+                    , row 21 30 "Heavy fog" "1d4"
+                    , row 31 35 "Rain" "1d4"
+                    , row 36 70 "Rain" "1d8"
+                    , row 71 90 "Rain" "2d12"
+                    , row 91
+                        100
+                        (if model.currentTemperature == Above40 then
+                            "Rain"
+
+                         else
+                            "Sleet"
+                        )
+                        "1d4"
+                    ]
+
+                ( Medium, False ) ->
+                    [ row 1 10 "Medium fog" "1d6"
+                    , row 11 20 "Medium fog" "1d8"
+                    , row 21 30 "Heavy fog" "1d4"
+                    , row 31 50 "Medium snow" "1d4"
+                    , row 51 90 "Medium snow" "1d8"
+                    , row 91 100 "Medium snow" "2d12"
+                    ]
+
+                ( Heavy, True ) ->
+                    [ row 1 10 "Heavy fog" "1d8"
+                    , row 11 20 "Heavy fog" "2d6"
+                    , row 21 50 "Heavy rain" "1d12"
+                    , row 51 70 "Heavy rain" "2d12"
+                    , row 71
+                        85
+                        (if model.currentTemperature == Above40 then
+                            "Heavy rain"
+
+                         else
+                            "Sleet"
+                        )
+                        "1d8"
+                    , row 86 90 "Thunderstorm" "1"
+                    , row 91 100 "Thunderstorm" "1d3"
+                    ]
+
+                ( Heavy, False ) ->
+                    [ row 1 10 "Medium fog" "1d8"
+                    , row 11 20 "Heavy fog" "2d6"
+                    , row 21 60 "Light snow" "2d12"
+                    , row 61 90 "Medium snow" "1d8"
+                    , row 91 100 "Heavy snow" "1d6"
+                    ]
+
+                ( Torrential, True ) ->
+                    [ row 1 5 "Heavy fog" "1d8"
+                    , row 6 10 "Heavy fog" "2d6"
+                    , row 11 30 "Heavy rain" "2d6"
+                    , row 31 60 "Heavy rain" "2d12"
+                    , row 61
+                        80
+                        (if model.currentTemperature == Above40 then
+                            "Heavy rain"
+
+                         else
+                            "Sleet"
+                        )
+                        "2d6"
+                    , row 81 95 "Thunderstorm" "1d3"
+                    , row 96 100 "Thunderstorm" "1d6"
+                    ]
+
+                ( Torrential, False ) ->
+                    [ row 1 5 "Heavy fog" "1d8"
+                    , row 6 10 "Heavy fog" "2d6"
+                    , row 11 50 "Heavy snow" "1d4"
+                    , row 51 90 "Heavy snow" "1d8"
+                    , row 91 100 "Heavy snow" "2d12"
+                    ]
     in
     boxxxy "Result"
-        [ Html.text "TODO" ]
+        [ Html.p []
+            [ Html.text ("Roll the daily probability (" ++ String.fromInt probability ++ "%).")
+            ]
+        , Html.p [ Html.Attributes.style "inline-size" "contain" ]
+            [ Html.text "If there is precipitation, "
+            , Html.br [] []
+            , Html.text "roll a random starting hour."
+            ]
+        , Html.table [] (header :: data)
+        ]
 
 
 variationsBox : Model -> Html Msg
@@ -184,22 +336,33 @@ variationsBox model =
 currentTemperatureBox : Model -> Html Msg
 currentTemperatureBox model =
     let
-        freezing : String
-        freezing =
-            temperatureToString model (Temperature.degreesCelsius 0)
+        forty : Temperature
+        forty =
+            Temperature.degreesFahrenheit 40
+
+        thirtyTwo : Temperature
+        thirtyTwo =
+            Temperature.degreesFahrenheit 32
     in
     boxxxy "Current temperature"
         [ Theme.toggle []
-            { onPress = ClickedAboveFreezing
-            , selected = model.aboveFreezing
-            , label = "Above freezing (" ++ freezing ++ ")"
+            { onPress = ClickedCurrentTemperature Above40
+            , selected = model.currentTemperature == Above40
+            , label = "Above " ++ temperatureToString model forty
             , color = Nothing
             , background = Nothing
             }
         , Theme.toggle []
-            { onPress = ClickedBelowFreezing
-            , selected = not model.aboveFreezing
-            , label = "Below freezing (" ++ freezing ++ ")"
+            { onPress = ClickedCurrentTemperature Between32And40
+            , selected = model.currentTemperature == Between32And40
+            , label = "Between " ++ temperatureToString model thirtyTwo ++ " and " ++ temperatureToString model forty
+            , color = Nothing
+            , background = Nothing
+            }
+        , Theme.toggle []
+            { onPress = ClickedCurrentTemperature Below32
+            , selected = model.currentTemperature == Below32
+            , label = "Below " ++ temperatureToString model thirtyTwo
             , color = Nothing
             , background = Nothing
             }
@@ -640,8 +803,5 @@ update msg model =
         ClickedIsDesert isDesert ->
             { model | isDesert = isDesert }
 
-        ClickedAboveFreezing ->
-            { model | aboveFreezing = True }
-
-        ClickedBelowFreezing ->
-            { model | aboveFreezing = False }
+        ClickedCurrentTemperature currentTemperature ->
+            { model | currentTemperature = currentTemperature }
