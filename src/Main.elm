@@ -405,6 +405,42 @@ windBox model =
                 , Html.td [] [ Html.text "Small" ]
                 , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–8" ]
                 ]
+            , Html.tr []
+                [ Html.td
+                    [ Html.Attributes.colspan 3
+                    , Html.Attributes.style "text-align" "center"
+                    ]
+                    [ Html.text "—" ]
+                , Html.td [] [ Html.text "Hurricane" ]
+                , Html.td
+                    [ Html.Attributes.colspan 3
+                    , Html.Attributes.style "text-align" "right"
+                    ]
+                    [ Html.text (speedToString (Speed.milesPerHour 51) ++ "+") ]
+                , Html.td [] [ Html.text unitString ]
+                , Html.td [] [ Html.text "Impossible" ]
+                , Html.td [] [ Html.text "Large" ]
+                , Html.td [] [ Html.text "Medium" ]
+                , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–12" ]
+                ]
+            , Html.tr []
+                [ Html.td
+                    [ Html.Attributes.colspan 3
+                    , Html.Attributes.style "text-align" "center"
+                    ]
+                    [ Html.text "—" ]
+                , Html.td [] [ Html.text "Tornado" ]
+                , Html.td
+                    [ Html.Attributes.colspan 3
+                    , Html.Attributes.style "text-align" "right"
+                    ]
+                    [ Html.text (speedToString (Speed.milesPerHour 51) ++ "+") ]
+                , Html.td [] [ Html.text unitString ]
+                , Html.td [] [ Html.text "Impossible" ]
+                , Html.td [] [ Html.text "Huge" ]
+                , Html.td [] [ Html.text "Large*" ]
+                , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–12" ]
+                ]
             ]
         , Html.p [] [ Html.b [] [ Html.text "Wind Speed: " ], Html.text "Wind speed typically fluctuates between these values through the period of the day. For moderate or higher wind strength there are periods in the day when the wind speed dips below the listed range." ]
         , Html.p [] [ Html.b [] [ Html.text "Ranged Weapon Penalty: " ], Html.text "These are the penalties that characters take when firing ranged weapons. This includes ranged attacks made via conjuration, but not evocation." ]
