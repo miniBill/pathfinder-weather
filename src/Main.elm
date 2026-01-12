@@ -14,6 +14,7 @@ import Intensity exposing (Intensity(..))
 import Length exposing (Length)
 import List.Extra
 import Precipitation exposing (Precipitation(..))
+import Quantity
 import Season exposing (Season(..))
 import Speed exposing (Speed)
 import Temperature exposing (Temperature)
@@ -313,23 +314,38 @@ windBox model =
         windSpeedCells from to =
             [ Html.td
                 [ Html.Attributes.style "text-align" "right" ]
-                [ Html.text (speedToString (Speed.milesPerHour from)) ]
+                [ Html.text
+                    (speedToString
+                        (if from == 0 then
+                            0
+
+                         else
+                            1
+                        )
+                        (Speed.milesPerHour from)
+                    )
+                ]
             , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–" ]
-            , Html.td [] [ Html.text (speedToString (Speed.milesPerHour to)) ]
+            , Html.td [] [ Html.text (speedToString 0 (Speed.milesPerHour to)) ]
             , Html.td [] [ Html.text unitString ]
             ]
 
-        speedToString : Speed -> String
-        speedToString speed =
+        speedToString : Int -> Speed -> String
+        speedToString adjust speed =
+            let
+                format : Float -> String
+                format v =
+                    String.fromInt (adjust + round v)
+            in
             case model.speedUnit of
                 KilometersPerHour ->
-                    String.fromInt (round (Speed.inKilometersPerHour speed))
+                    format (Speed.inKilometersPerHour speed)
 
                 MilesPerHour ->
-                    String.fromInt (round (Speed.inMilesPerHour speed))
+                    format (Speed.inMilesPerHour speed)
 
                 Knots ->
-                    String.fromInt (round (Speed.inKilometersPerHour speed / 1.852))
+                    format (Speed.inKilometersPerHour speed / 1.852)
 
         unitString : String
         unitString =
@@ -367,7 +383,7 @@ windBox model =
                 )
             , percentRow ( 51, 80 )
                 (Html.td [] [ Html.text "Moderate" ]
-                    :: windSpeedCells 11 20
+                    :: windSpeedCells 10 20
                     ++ [ Html.td [] []
                        , Html.td [] []
                        , Html.td [] []
@@ -376,7 +392,7 @@ windBox model =
                 )
             , percentRow ( 81, 90 )
                 (Html.td [] [ Html.text "Strong" ]
-                    :: windSpeedCells 21 30
+                    :: windSpeedCells 20 30
                     ++ [ Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–2" ]
                        , Html.td [] [ Html.text "Tiny" ]
                        , Html.td [] []
@@ -385,7 +401,7 @@ windBox model =
                 )
             , percentRow ( 91, 95 )
                 (Html.td [] [ Html.text "Severe" ]
-                    :: windSpeedCells 31 50
+                    :: windSpeedCells 30 50
                     ++ [ Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–4" ]
                        , Html.td [] [ Html.text "Small" ]
                        , Html.td [] [ Html.text "Tiny" ]
@@ -393,54 +409,47 @@ windBox model =
                        ]
                 )
             , percentRow ( 96, 100 )
-                [ Html.td [] [ Html.text "Windstorm" ]
-                , Html.td
-                    [ Html.Attributes.colspan 3
-                    , Html.Attributes.style "text-align" "right"
-                    ]
-                    [ Html.text (speedToString (Speed.milesPerHour 51) ++ "+") ]
-                , Html.td [] [ Html.text unitString ]
-                , Html.td [] [ Html.text "Impossible" ]
-                , Html.td [] [ Html.text "Medium" ]
-                , Html.td [] [ Html.text "Small" ]
-                , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–8" ]
-                ]
+                (Html.td [] [ Html.text "Windstorm" ]
+                    :: windSpeedCells 50 74
+                    ++ [ Html.td [] [ Html.text unitString ]
+                       , Html.td [] [ Html.text "Impossible" ]
+                       , Html.td [] [ Html.text "Medium" ]
+                       , Html.td [] [ Html.text "Small" ]
+                       , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–8" ]
+                       ]
+                )
             , Html.tr []
-                [ Html.td
+                ([ Html.td
                     [ Html.Attributes.colspan 3
                     , Html.Attributes.style "text-align" "center"
                     ]
                     [ Html.text "—" ]
-                , Html.td [] [ Html.text "Hurricane" ]
-                , Html.td
-                    [ Html.Attributes.colspan 3
-                    , Html.Attributes.style "text-align" "right"
-                    ]
-                    [ Html.text (speedToString (Speed.milesPerHour 51) ++ "+") ]
-                , Html.td [] [ Html.text unitString ]
-                , Html.td [] [ Html.text "Impossible" ]
-                , Html.td [] [ Html.text "Large" ]
-                , Html.td [] [ Html.text "Medium" ]
-                , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–12" ]
-                ]
+                 , Html.td [] [ Html.text "Hurricane" ]
+                 ]
+                    ++ windSpeedCells 74 174
+                    ++ [ Html.td [] [ Html.text unitString ]
+                       , Html.td [] [ Html.text "Impossible" ]
+                       , Html.td [] [ Html.text "Large" ]
+                       , Html.td [] [ Html.text "Medium" ]
+                       , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–12" ]
+                       ]
+                )
             , Html.tr []
-                [ Html.td
+                ([ Html.td
                     [ Html.Attributes.colspan 3
                     , Html.Attributes.style "text-align" "center"
                     ]
                     [ Html.text "—" ]
-                , Html.td [] [ Html.text "Tornado" ]
-                , Html.td
-                    [ Html.Attributes.colspan 3
-                    , Html.Attributes.style "text-align" "right"
-                    ]
-                    [ Html.text (speedToString (Speed.milesPerHour 51) ++ "+") ]
-                , Html.td [] [ Html.text unitString ]
-                , Html.td [] [ Html.text "Impossible" ]
-                , Html.td [] [ Html.text "Huge" ]
-                , Html.td [] [ Html.text "Large*" ]
-                , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–12" ]
-                ]
+                 , Html.td [] [ Html.text "Tornado" ]
+                 ]
+                    ++ windSpeedCells 174 300
+                    ++ [ Html.td [] [ Html.text unitString ]
+                       , Html.td [] [ Html.text "Impossible" ]
+                       , Html.td [] [ Html.text "Huge" ]
+                       , Html.td [] [ Html.text "Large*" ]
+                       , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–16" ]
+                       ]
+                )
             ]
         , Html.p [] [ Html.b [] [ Html.text "Wind Speed: " ], Html.text "Wind speed typically fluctuates between these values through the period of the day. For moderate or higher wind strength there are periods in the day when the wind speed dips below the listed range." ]
         , Html.p [] [ Html.b [] [ Html.text "Ranged Weapon Penalty: " ], Html.text "These are the penalties that characters take when firing ranged weapons. This includes ranged attacks made via conjuration, but not evocation." ]
