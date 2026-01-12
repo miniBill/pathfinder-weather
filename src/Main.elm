@@ -14,7 +14,6 @@ import Intensity exposing (Intensity(..))
 import Length exposing (Length)
 import List.Extra
 import Precipitation exposing (Precipitation(..))
-import Quantity
 import Season exposing (Season(..))
 import Speed exposing (Speed)
 import Temperature exposing (Temperature)
