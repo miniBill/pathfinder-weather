@@ -411,8 +411,7 @@ windBox model =
             , percentRow ( 96, 100 )
                 (Html.td [] [ Html.text "Windstorm" ]
                     :: windSpeedCells 50 74
-                    ++ [ Html.td [] [ Html.text unitString ]
-                       , Html.td [] [ Html.text "Impossible" ]
+                    ++ [ Html.td [] [ Html.text "Impossible" ]
                        , Html.td [] [ Html.text "Medium" ]
                        , Html.td [] [ Html.text "Small" ]
                        , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–8" ]
@@ -427,8 +426,7 @@ windBox model =
                  , Html.td [] [ Html.text "Hurricane" ]
                  ]
                     ++ windSpeedCells 74 174
-                    ++ [ Html.td [] [ Html.text unitString ]
-                       , Html.td [] [ Html.text "Impossible" ]
+                    ++ [ Html.td [] [ Html.text "Impossible" ]
                        , Html.td [] [ Html.text "Large" ]
                        , Html.td [] [ Html.text "Medium" ]
                        , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–12" ]
@@ -443,8 +441,7 @@ windBox model =
                  , Html.td [] [ Html.text "Tornado" ]
                  ]
                     ++ windSpeedCells 174 300
-                    ++ [ Html.td [] [ Html.text unitString ]
-                       , Html.td [] [ Html.text "Impossible" ]
+                    ++ [ Html.td [] [ Html.text "Impossible" ]
                        , Html.td [] [ Html.text "Huge" ]
                        , Html.td [] [ Html.text "Large*" ]
                        , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–16" ]
