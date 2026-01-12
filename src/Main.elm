@@ -746,8 +746,12 @@ baselineInputBox model =
 altitudeBox : Model -> Html Msg
 altitudeBox model =
     let
-        altitudeCell : List (Attribute Msg) -> Altitude -> String -> Html Msg
-        altitudeCell attrs altitude label =
+        simpleAltitudeCell : List (Attribute Msg) -> Altitude -> String -> Html Msg
+        simpleAltitudeCell attrs altitude label =
+            altitudeCell attrs (model.altitude == altitude) altitude label
+
+        altitudeCell : List (Attribute Msg) -> Bool -> Altitude -> String -> Html Msg
+        altitudeCell attrs selected altitude label =
             Html.div attrs
                 [ Theme.toggle
                     [ Html.Attributes.style "width" "100%"
@@ -755,11 +759,23 @@ altitudeBox model =
                     ]
                     { color = Nothing
                     , background = Nothing
-                    , selected = model.altitude == altitude
+                    , selected = selected
                     , label = label
                     , onPress = ClickedAltitude altitude
                     }
                 ]
+
+        asHighland : Maybe Highland
+        asHighland =
+            case model.altitude of
+                Highland highland ->
+                    Just highland
+
+                SeaLevel ->
+                    Nothing
+
+                Lowland ->
+                    Nothing
     in
     boxxxy "Select an altitude"
         []
@@ -770,17 +786,17 @@ altitudeBox model =
             ]
             [ Html.div [] [ Html.text "Altitude" ]
             , Html.div [ Html.Attributes.style "grid-column" "span 2" ] [ Html.text "Range" ]
-            , altitudeCell []
+            , simpleAltitudeCell []
                 SeaLevel
                 (Altitude.toString SeaLevel)
-            , altitudeCell
+            , simpleAltitudeCell
                 [ Html.Attributes.style "grid-column" "span 2" ]
                 SeaLevel
                 ("Below " ++ altitudeToString model (Length.feet 1000))
-            , altitudeCell []
+            , simpleAltitudeCell []
                 Lowland
                 (Altitude.toString Lowland)
-            , altitudeCell
+            , simpleAltitudeCell
                 [ Html.Attributes.style "grid-column" "span 2" ]
                 Lowland
                 (altitudeToString model (Length.feet 1000)
@@ -789,19 +805,21 @@ altitudeBox model =
                 )
             , altitudeCell
                 [ Html.Attributes.style "grid-row" "span 3" ]
-                (Highland Altitude.Regular)
+                (asHighland /= Nothing)
+                (asHighland |> Maybe.withDefault Altitude.Regular |> Highland)
                 (Altitude.toString (Highland Altitude.Regular))
             , altitudeCell
                 [ Html.Attributes.style "grid-row" "span 3" ]
-                (Highland Altitude.Regular)
+                (asHighland /= Nothing)
+                (asHighland |> Maybe.withDefault Altitude.Regular |> Highland)
                 ("Above " ++ altitudeToString model (Length.feet 5000))
-            , altitudeCell []
+            , simpleAltitudeCell []
                 (Highland Altitude.Regular)
                 "Regular"
-            , altitudeCell []
+            , simpleAltitudeCell []
                 (Highland Arid)
                 "Arid and flat"
-            , altitudeCell []
+            , simpleAltitudeCell []
                 (Highland HighAltitude)
                 ("Above " ++ altitudeToString model (Length.feet 10000))
             ]
