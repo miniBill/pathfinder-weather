@@ -327,7 +327,6 @@ windBox model =
                 ]
             , Html.td [ Html.Attributes.style "text-align" "center" ] [ Html.text "–" ]
             , Html.td [] [ Html.text (speedToString 0 (Speed.milesPerHour to)) ]
-            , Html.td [] [ Html.text unitString ]
             ]
 
         speedToString : Int -> Speed -> String
@@ -360,17 +359,40 @@ windBox model =
                     "kt"
     in
     boxxxy "Wind"
-        [ Html.Attributes.style "max-width" "600px" ]
+        [ Html.Attributes.style "max-width" "580px" ]
         [ Html.p [] [ Html.text "Ignore this box if fog or thunderstorm." ]
         , Html.table []
             [ Html.tr []
-                [ Html.th [ Html.Attributes.style "inline-size" "min-content", Html.Attributes.colspan 3 ] [ Html.text "d%" ]
-                , Html.th [ Html.Attributes.style "inline-size" "min-content" ] [ Html.text "Wind Strength" ]
-                , Html.th [ Html.Attributes.style "inline-size" "min-content", Html.Attributes.colspan 4 ] [ Html.text "Wind Speed" ]
-                , Html.th [ Html.Attributes.style "inline-size" "min-content" ] [ Html.text "Ranged Weapon Penalty" ]
-                , Html.th [ Html.Attributes.style "inline-size" "min-content" ] [ Html.text "Check Size" ]
-                , Html.th [ Html.Attributes.style "inline-size" "min-content" ] [ Html.text "Blown Away Size" ]
-                , Html.th [ Html.Attributes.style "inline-size" "min-content" ] [ Html.text "Skill Penalty" ]
+                [ Html.th
+                    [ Html.Attributes.style "inline-size" "min-content"
+                    , Html.Attributes.colspan 3
+                    ]
+                    [ Html.text "d%" ]
+                , Html.th
+                    [ Html.Attributes.style "inline-size" "min-content"
+                    ]
+                    [ Html.text "Wind Strength" ]
+                , Html.th
+                    [ Html.Attributes.style "inline-size" "min-content"
+                    , Html.Attributes.colspan 3
+                    ]
+                    [ Html.text ("Wind Speed (" ++ unitString ++ ")") ]
+                , Html.th
+                    [ Html.Attributes.style "inline-size" "min-content"
+                    ]
+                    [ Html.text "Ranged Weapon Penalty" ]
+                , Html.th
+                    [ Html.Attributes.style "inline-size" "min-content"
+                    ]
+                    [ Html.text "Check Size" ]
+                , Html.th
+                    [ Html.Attributes.style "inline-size" "min-content"
+                    ]
+                    [ Html.text "Blown Away Size" ]
+                , Html.th
+                    [ Html.Attributes.style "inline-size" "min-content"
+                    ]
+                    [ Html.text "Skill Penalty" ]
                 ]
             , percentRow ( 1, 50 )
                 (Html.td [] [ Html.text "Light" ]
